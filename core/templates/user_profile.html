@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %}
+                class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'css/user_profile.css' %}">
+{% endblock %}
+
+{% block header %}
+    <h1>User Profile</h1>
+{% endblock %}
+
+{% block content %}
+    <p><strong>Email:</strong> {{ user_profile.user.email }}</p>
+    <p><strong>Preferred Sites:</strong> {{ user_profile.preferred_sites }}</p>
+{% endblock %}
+
+
+
+
