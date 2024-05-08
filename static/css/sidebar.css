@@ -1,0 +1,17 @@
+.adlam-display-regular {
+  font-family: "ADLaM Display", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.sidebar-menu {
+    display: flex;
+    list-style-type: none;
+    flex-direction: column;
+    padding: 0;
+    align-items: center;
+    height: 400px;
+    justify-content: flex-start;
+    row-gap: 40px;
+    margin-top: 32px;
+}

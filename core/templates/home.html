@@ -1,16 +1,68 @@
 {% extends 'base.html' %}
 
 {% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %}
+                class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
 {% endif %}
 
 {% block header %}<h1>Home</h1>{% endblock %}
 {% block content %}
-    <p> Welcome to the home page!</p>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris
+        pellentesque a ligula eu vestibulum. Fusce in lectus ut ligula rutrum
+        scelerisque egestas non dolor. Nullam ultricies faucibus cursus. Cras
+        porttitor orci vel urna mollis facilisis. In sodales dapibus lacus, et
+        aliquet diam egestas non. Suspendisse non nisi eu nulla facilisis
+        sodales. Integer in neque lacus. Aliquam sapien mi, tristique a iaculis
+        ut, condimentum et augue. Etiam in accumsan nunc. Sed ut massa
+        imperdiet, efficitur est vel, gravida neque. Nulla vitae enim quis odio
+        vulputate aliquam.
+
+        Suspendisse et augue luctus odio sagittis aliquam id in mi. Donec sit
+        amet velit elit. Duis vulputate a quam nec semper. Curabitur elit erat,
+        vestibulum non interdum a, fringilla non ipsum. Nullam sodales orci ut
+        elit rhoncus tristique molestie ac quam. Praesent interdum volutpat
+        turpis, ac auctor nisl scelerisque ut. Ut pulvinar, purus quis
+        vestibulum dignissim, dolor arcu auctor leo, nec imperdiet augue magna
+        sit amet massa. Donec dictum tellus leo, et feugiat dui viverra non.
+        Integer dapibus ultricies lorem in finibus. Nam eros orci, congue a
+        varius in, sagittis facilisis quam. Suspendisse ac augue dignissim,
+        semper felis ac, vulputate arcu. Aliquam ac quam venenatis, aliquet ex
+        interdum, lacinia nunc. Morbi nunc quam, laoreet eu dui eget, convallis
+        maximus justo.
+
+        Donec laoreet, odio malesuada elementum eleifend, leo eros pretium quam,
+        ac aliquam lacus dui in ante. Suspendisse eu massa vitae magna finibus
+        rhoncus. Curabitur tortor metus, placerat sit amet nisi eu, accumsan
+        facilisis lorem. Suspendisse potenti. Maecenas lacinia luctus nisi
+        semper finibus. Vestibulum ultricies lorem a euismod varius. Morbi
+        finibus metus quis mauris iaculis, nec faucibus dolor molestie. Nulla
+        sit amet urna id felis congue ullamcorper id ac justo. Pellentesque
+        habitant morbi tristique senectus et netus et malesuada fames ac turpis
+        egestas. Maecenas sit amet libero pharetra, feugiat elit sit amet,
+        cursus mauris.
+
+        Ut blandit turpis nec turpis faucibus ultricies. Vivamus molestie
+        placerat magna, sed egestas tortor imperdiet quis. Quisque sodales
+        mauris sed sem mattis, ac hendrerit diam porttitor. Nam sagittis
+        vestibulum ipsum eu rutrum. Aenean vitae elementum lectus. In euismod
+        enim a lorem accumsan, nec scelerisque risus viverra. Sed consequat ut
+        tortor efficitur vehicula.
+
+        Vestibulum blandit ipsum sed quam lobortis varius. Maecenas in sem id
+        eros lacinia varius non a tortor. Mauris bibendum lectus luctus nibh
+        congue accumsan. Nullam tortor erat, convallis at lectus at, dapibus
+        luctus metus. Cras vitae blandit velit. Nullam dolor lectus, dignissim a
+        scelerisque quis, suscipit quis velit. Suspendisse nisl tellus,
+        consectetur id massa in, sagittis posuere nisl. Cras aliquam enim quis
+        nulla commodo luctus. Ut at lectus massa. Nullam venenatis imperdiet mi,
+        vitae efficitur augue maximus sit amet. Phasellus tempor libero et
+        faucibus vulputate. Morbi ex nisi, mattis ac efficitur eget, accumsan
+        quis dolor. Curabitur porttitor viverra dui, in interdum quam maximus
+        quis.</p>
 {% endblock %}
 
 

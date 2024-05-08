@@ -6,21 +6,32 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block styles %}{% endblock %}
+    <script src="https://kit.fontawesome.com/f9d86a2e19.js"
+            crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
     <title>{% block title %}My Website{% endblock %}</title>
+    {% block styles %}{% endblock %}
 </head>
 <body>
-{% include 'navbar.html' %}
+<nav class="sidebar">
+    {% include 'sidebar.html' %}
+</nav>
 
-<div id="content">
-    {% block content %}{% endblock %}
+<nav class="navbar">
+    {% include 'navbar.html' %}
+</nav>
+
+<div class="container">
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
 </div>
 
-<footer>
-    <p>&copy; {% now "Y" %} My Website. All rights reserved.</p>
-    <!-- Add footer content or scripts here -->
-</footer>
+
+<script src="https://kit.fontawesome.com/f9d86a2e19.js"
+        crossorigin="anonymous"></script>
+{% block js %}
+{% endblock %}
 
 </body>
 </html>

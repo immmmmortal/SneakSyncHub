@@ -1,0 +1,20 @@
+{% load static %}
+
+
+<ul class="sidebar-menu">
+    <li><a href="{% url 'home' %}"><i class="fa-regular fa-rectangle-list"
+                                      style="color: #ffffff;"></i></a>
+        <p>Fetch</p></li>
+    <li><a href="{% url 'home' %}"><i class="fa-solid fa-house"
+                                      style="color: #ffffff;">
+    </i></a>
+        <p>Home</p></li>
+    <li><a href="#"><i class="fa-solid fa-gear" style="color: #ffffff;"></i></a>
+        <p>Settings</p></li>
+    {% if user.is_authenticated %}
+
+    {% endif %}
+</ul>
+
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/sidebar.css' %}">
