@@ -26,9 +26,8 @@ def user_profile_view(request, user_id):
 
 def fetch_page_view(request):
     if request.method == 'POST':
-        article = request.POST.get('article_field')
+        article = request.POST.get('article-field')
         article_info = scrape_by_article(article)
-
 
         return render(request, 'fetch_page.html', {
             article_info:
