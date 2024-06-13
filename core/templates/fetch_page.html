@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+    <div class="search-field-container">
+        <form method="POST" class="search-bar-two">
+            {% csrf_token %}
+            <div class="searchbar-wrapper">
+                <div class="wrapper">
+                    <i class="fa-solid fa-magnifying-glass two"
+                       style="color: #ffffff;"></i>
+                </div>
+                <label style="display: flex">
+                    <input type="text"
+                           class="article-field"
+                           name="article-field"
+                           placeholder="Search">
+                </label>
+            </div>
+        </form>
+    </div>
+
+    <div class="article-search-section">
+        {{ article_info }}
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/fetch.js' %}"></script>
+{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'css/fetch_page.css' %}">
+{% endblock %}
+

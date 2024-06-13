@@ -1,0 +1,87 @@
+.adlam-display-regular {
+    font-family: "ADLaM Display", system-ui;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.fa-solid.fa-bars {
+    display: flex;
+    justify-content: center;
+    width: 80px;
+}
+
+.navbar-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    z-index: 100;
+    width: 100%;
+    margin: 0 30px 0 0;
+}
+
+.left-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+}
+
+.middle-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex: 3;
+}
+
+.fa-solid.fa-magnifying-glass {
+    height: 42px;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px 0 10px;
+    background-color: #363636;;
+    border-radius: 0 5px 5px 0;
+    position: relative;
+    left: -1px;
+    border: 1px solid grey;
+}
+
+.right-section {
+    padding-left: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    width: 50px;
+    justify-content: flex-end;
+    column-gap: 50px;
+    list-style-type: none;
+}
+
+.search-bar {
+    width: 500px;
+    outline: none;
+    height: 40px;
+    border-radius: 5px 0 0 5px;
+    border: 1px solid gray;
+    padding-left: 10px;
+    background-color: #363636;
+    color: white;
+    font-size: 17px;
+}
+
+.search-bar::placeholder {
+    color: white;
+    font-size: 17px;
+}
+
+.image {
+    width: 50px;
+    height: 50px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
