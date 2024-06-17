@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404 # type: ignore
 from django.contrib.auth.decorators import login_required # type: ignore
-from core.scraping.scrape_by_article_nike import scrape_by_article
+from core.scraping.scrape import ScrapeByArticleNike
 from members.models import UserProfile
-
+from django.http import JsonResponse
 
 # Create your views here.
 def home(request):
@@ -19,13 +19,10 @@ def user_profile_view(request, user_id):
 
 
 def fetch_page_view(request):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.is_ajax():
         article = request.POST.get('article-field')
-        article_info = scrape_by_article(article)
-
-        return render(request,
-                      'fetch_page.html', 
-                      {'article_info': article_info}
-                      )
-    else:
+        article_info = ScrapeByArticleNike(article).scrape()
+        return JsonResponse(article_info)
+        
+    else:g
         return render(request, 'fetch_page.html')
