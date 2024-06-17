@@ -19,10 +19,9 @@ def user_profile_view(request, user_id):
 
 
 def fetch_page_view(request):
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST':
         article = request.POST.get('article-field')
         article_info = ScrapeByArticleNike(article).scrape()
-        return JsonResponse(article_info)
-        
-    else:g
+        return render(request, 'fetch_page.html', {'article_info': article_info})
+    else:
         return render(request, 'fetch_page.html')

@@ -1,5 +1,22 @@
-alert("fetch.js loaded");
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementsByClassName('search-bar-two');
+    const article_info = document.getElementsByClassName('article-info-section');
 
-function sendPostRequestFetchField(article){
-   
-}
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();  // Prevent the form from submitting the traditional way
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+});
