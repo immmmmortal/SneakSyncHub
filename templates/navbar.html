@@ -24,7 +24,7 @@
 
     <ul class="right-section">
         {% if user.is_authenticated %}
-            <li><a href="#"><i class="fa-solid fa-user"
+            <li><a href="{% url 'user_profile' user.id %}"><i class="fa-solid fa-user"
                                style="color: #ffffff;"></i></a></li>
             <li><a href="{% url 'logout' %}"><i
                     class="fa-solid fa-right-from-bracket"

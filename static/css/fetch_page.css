@@ -1,5 +1,9 @@
-.search-field-container {
-
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #2c2a2a inset !important;
+    -webkit-text-fill-color: white
 }
 
 .search-field-container p {
@@ -13,6 +17,13 @@
     padding: 7px;
     width: 200px;
     margin-left: 0;
+}
+
+
+#search-icon-submit{
+    background-color: #2c2a2a;
+    border: none;
+    color: white;
 }
 
 .article-field::placeholder {

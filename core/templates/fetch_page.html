@@ -8,14 +8,17 @@
             {% csrf_token %}
             <div class="searchbar-wrapper">
                 <div class="wrapper">
+                <button id="search-icon-submit">
                     <i class="fa-solid fa-magnifying-glass two"
                        style="color: #ffffff;"></i>
+                </button>
                 </div>
                 <label style="display: flex">
                     <input type="text"
                            class="article-field"
                            name="article-field"
-                           placeholder="Search">
+                           placeholder="Search"
+                           required>
                 </label>
             </div>
         </form>

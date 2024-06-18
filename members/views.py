@@ -1,48 +1,62 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, redirect
-
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.decorators import login_required
 from members.forms import CustomUserCreationForm, CustomAuthenticationForm
+from members.models import UserProfile
 
 
 # Create your views here.
 
+
 def signup_user(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('signup_success')
+            return redirect("signup_success")
     else:
         form = CustomUserCreationForm()
 
-    return render(request, 'signup.html',
-                  {'form': form, })
+    return render(
+        request,
+        "signup.html",
+        {
+            "form": form,
+        },
+    )
 
 
 def signup_success(request):
-    return render(request, 'signup_success.html')
+    return render(request, "signup_success.html")
 
 
 def login_view(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = CustomAuthenticationForm(request, request.POST)
         if form.is_valid():
-            email = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
+            email = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
             user = authenticate(request, email=email, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f'Welcome back, {email}!')
-                return redirect('home')
+                messages.success(request, f"Welcome back, {email}!")
+                return redirect("home")
             else:
-                messages.error(request, 'Invalid email or password.')
+                messages.error(request, "Invalid email or password.")
     else:
         form = CustomAuthenticationForm()
 
-    return render(request, 'login.html', {'form': form})
+    return render(request, "login.html", {"form": form})
 
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect("login")
+
+
+@login_required(login_url="/members/login")
+def user_profile_view(request, user_id):
+    user_profile = get_object_or_404(UserProfile, id=user_id)
+
+    return render(request, "user_profile.html", {"user_profile": user_profile})
