@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404  # type: ignore
 from django.contrib.auth.decorators import login_required  # type: ignore
 from core.models import Shoe
 from core.scraping.scrape import ScrapeByArticleNike
-from members.models import CustomUser, UserProfile
+from members.models import UserProfile
 
 
 # Create your views here.
