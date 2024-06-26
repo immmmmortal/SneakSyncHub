@@ -22,40 +22,50 @@ class ArticleInfo(TypedDict):
     sizes: list[str]
 
 
-class ScraperTemplate(ABC):
-    def __init__(self, article) -> None:
+class ScraperBase(ABC):
+    _SEARCH_PAGE_URL_TEMPLATE: str
+
+    def __init__(self, article):
         self.available_sizes = list()
-        self.url: str
-        self.article = article
+        self.article: str = article
         self.html_selectors: HTMLSelectors
         self.article_info: ArticleInfo
+        self.search_page_url: str
         self.__setup()
 
     def __setup(self):
         self.driver = webdriver.Chrome()
-        self.html = requests.get(self.url)
+        self.html = requests.get(self.search_page_url)
         self.soup = BeautifulSoup(self.html.text, "html.parser")
 
+    def _compose_product_url(self, article) -> str:
+        return self._SEARCH_PAGE_URL_TEMPLATE.format(article, article)
+
     @abstractmethod
-    def retrieve_article_info(self):
+    def retrieve_product_url(self) -> str:
         pass
 
     @abstractmethod
-    def retrieve_product_url(self):
+    def retrieve_article_info(self) -> None:
         pass
 
     @abstractmethod
-    def retrieve_available_sizes(self):
+    def retrieve_product_page(self) -> None:
         pass
 
     @abstractmethod
-    def scrape(self):
+    def retrieve_available_sizes(self) -> None:
+        pass
+
+    @abstractmethod
+    def scrape(self) -> ArticleInfo:
         pass
 
 
-class ScrapeByArticleNike(ScraperTemplate):
+class ScrapeByArticleNike(ScraperBase):
+    _SEARCH_PAGE_URL_TEMPLATE = "https://www.nike.com/w?q={0}&vst={1}"
+
     def __init__(self, article):
-        self.url = f"https://www.nike.com/w?q={article}&vst={article}"
         self.html_selectors = {
             "products_list": "product-card__body",
             "product_url": "",
@@ -65,19 +75,23 @@ class ScrapeByArticleNike(ScraperTemplate):
             "product_sizes": "skuAndSize",
             "products_colors": "nr-pdp-colorway-",
         }
+        self.search_page_url = self._compose_product_url(article)
         super().__init__(article)
 
-    def retrieve_product_url(self):
-        self.products = self.soup.find_all(
+    def retrieve_product_url(self) -> str:
+        products = self.soup.find_all(
             "div", {"class": self.html_selectors["products_list"]}
         )
-        self.product_url = self.products[0].find("a", href=True)["href"]
-        self.html_selectors["product_url"] = self.product_url
-        self.driver.get(self.product_url)
+        self.product_url = products[0].find("a", href=True)["href"]
+        return self.product_url
+
+    def retrieve_product_page(self):
+        product_url = self.retrieve_product_url()
+        self.driver.get(product_url)
         self.driver.implicitly_wait(1)
-        self.product_html = self.driver.page_source
+        product_html = self.driver.page_source
         self.driver.quit()
-        self.soup = BeautifulSoup(self.product_html, "html.parser")
+        self.soup = BeautifulSoup(product_html, "html.parser")
 
     def retrieve_article_info(self):
         self.inputs = self.soup.find_all(
@@ -105,7 +119,7 @@ class ScrapeByArticleNike(ScraperTemplate):
                 self.available_sizes.append(size)
 
     def scrape(self):
-        self.retrieve_product_url()
+        self.retrieve_product_page()
         self.retrieve_article_info()
         self.retrieve_available_sizes()
 
