@@ -25,7 +25,33 @@
     </div>
 
     <div class="article-inf-section">
-        {{ article_info.price }}
+     <form method="post" action="{% url 'fetch_page' %}">
+        {% csrf_token %}
+        <button type="submit" name="clear_articles" value="true">Clear Articles</button>
+    </form>
+    {%if article_info%}
+       <ul>
+            <li>
+                <p>URL: {{ article_info.url }}</p>
+                <p>Price: {{ article_info.price }}</p>{{article_info.product_image_url}}
+                <p>Image: <img 
+                    src="{{ article_info.image }}"
+                    alt="{{ article_info.name }}">
+                </p>
+                <p>Name: {{ article_info.name }}</p>
+            </li>
+    </ul>
+    {%endif%}
+        <ul>
+        {% for article in scraped_articles_history %}
+            <li>
+                <p>URL: {{ article.url }}</p>
+                <p>Price: {{ article.price }}</p>
+                <p>Image: <img src="{{ article.image }}" alt="{{ article.name }}"></p>
+                <p>Name: {{ article.name }}</p>
+            </li>
+        {% endfor %}
+    </ul>
     </div>
     
 {% endblock %}

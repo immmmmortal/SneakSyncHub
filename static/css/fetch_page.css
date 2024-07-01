@@ -19,7 +19,6 @@ input:-webkit-autofill:active{
     margin-left: 0;
 }
 
-
 #search-icon-submit{
     background-color: #2c2a2a;
     border: none;
@@ -60,6 +59,11 @@ input:-webkit-autofill:active{
     flex-direction: row;
     justify-content: flex-end;
     width: 92%;
+}
+
+img{
+    width: 144px;
+    height: 144px;
 }
 
 .fa-solid.fa-magnifying-glass.two:hover {
