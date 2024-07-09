@@ -1,9 +1,12 @@
 from django.urls import path
+from rest_framework import routers
 
 from core import views
 
+router = routers.DefaultRouter()
+
 urlpatterns = [
-    path("", views.home, name="home"),
-    path("profile/<int:user_id>/", views.user_profile_view, name="user_profile"),
-    path("fetch", views.fetch_page_view, name="fetch_page"),
+    path("", views.HomeView.as_view(), name="home"),
+    path("fetch", views.FetchPageView.as_view(), name="fetch_page"),
+    path('shoes', views.ShoesView.as_view(), name="view_shoes"),
 ]

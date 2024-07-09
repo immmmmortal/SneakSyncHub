@@ -47,6 +47,16 @@ class SoupExtractorBase(ABC, WebDriver):
         )
         self._setup_driver()
 
+    def _set_article_info(self) -> ArticleInfo:
+        article_info = {
+            "url": self.product_url,
+            "price": self.price,
+            "product_image_url": self.colorway_image_url,
+            "name": self.colorway_name,
+            "sizes": list(self.available_sizes),
+        }
+        return article_info
+
     @abstractmethod
     def extract_product_url(self) -> str:
         pass
@@ -145,7 +155,7 @@ class ScrapeByArticleNike(ScraperBase, NikeSoupExtractor):
         self.extract_article_info()
         self.extract_available_sizes()
 
-        self.article_info = {
+        article_info = {
             "url": self.product_url,
             "price": self.price,
             "product_image_url": self.colorway_image_url,
@@ -153,4 +163,4 @@ class ScrapeByArticleNike(ScraperBase, NikeSoupExtractor):
             "sizes": list(self.available_sizes),
         }
 
-        return self.article_info
+        return article_info

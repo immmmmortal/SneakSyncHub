@@ -4,6 +4,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.db import models
+from rest_framework.authtoken.models import Token
 
 from core.models import Shoe
 
@@ -11,10 +12,10 @@ from core.models import Shoe
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError("The Email field must be set")
+            raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.set_password(password)
+        user.set_password(password)  # Hashing the password
         user.save(using=self._db)
         return user
 
@@ -24,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-class CustomUser(AbstractBaseUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser, PermissionsMixin, CustomUserManager):
     email = models.EmailField(unique=True)
 
     is_active = models.BooleanField(default=True)
@@ -47,7 +48,10 @@ class UserProfile(models.Model):
         upload_to="profile_pics/", default="default_profile_picture.jpg"
     )
     preferred_sites = models.TextField(default="")
-    scraped_articles = models.ManyToManyField(Shoe, related_name="scraped_articles")
+    scraped_articles = models.ManyToManyField(Shoe,
+                                              related_name="scraped_articles")
+
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.user.email

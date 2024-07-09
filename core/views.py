@@ -1,85 +1,93 @@
 from decimal import Decimal
-from django.shortcuts import redirect, render, get_object_or_404  # type: ignore
-from django.contrib.auth.decorators import login_required  # type: ignore
+
+import lorem
+from django.shortcuts import render  # type: ignore
+from rest_framework import status, permissions
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from core.models import Shoe
 from core.scraping.scrape import ScrapeByArticleNike
 from core.utils import get_user_profile
-from members.models import UserProfile
+from restapi.serializers import ShoeSerializer
 
 
-# Create your views here.
-def home(request):
-    return render(request, "home.html")
+class HomeView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        msg = lorem.text()
+        return Response({"title": msg})
 
 
-@login_required
-def user_profile_view(request):
-    user_profile = get_user_profile(request)
-    return render(request, "user_profile.html", {"user_profile": user_profile})
+class ClearUserParsedArticles(APIView):
+    def post(self, request):
+        user_profile = get_user_profile(request)
+        user_profile.scraped_articles.delete()
+        return Response(status=status.HTTP_200_OK)
 
 
-@login_required(login_url="/members/login")
-def clear_user_fetch_history(request):
-    user_profile = get_user_profile(request)
-    user_profile.scraped_articles.delete()
+class ShoesView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        scraped_articles = Shoe.objects.all()
+        serializer = ShoeSerializer(scraped_articles, many=True)
+        return Response(serializer.data)
 
 
-@login_required(login_url="/members/login")
-def fetch_page_view(request):
-    user_profile = get_object_or_404(UserProfile, user=request.user)
-    scraped_articles_history = user_profile.scraped_articles.all()
+class FetchPageView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
-    if request.method == "POST":
+    def get(self, request, format=None) -> Response:
+        user_profile = get_user_profile(request)
+        scraped_articles_history = user_profile.scraped_articles.all()
+        article_data = ShoeSerializer(scraped_articles_history,
+                                      many=True)
+        return Response(
+            {"article_data": article_data.data, }
+        )
+
+    def post(self, request) -> Response:
+        user_profile = get_user_profile(request)
+        article = request.data.get("article")
         parsed_articles = Shoe.objects.all()
-        article = request.POST.get("article-field")
 
-        if "clear_articles" in request.POST:
+        if "clear_articles" in request.data:
             user_profile.scraped_articles.clear()
-            return redirect("fetch_page")
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        elif not parsed_articles.filter(article=article):
+        if not parsed_articles.filter(article=article).exists():
             scraper = ScrapeByArticleNike(article)
             article_info = scraper.scrape()
 
             price_decimal = Decimal(
-                article_info["price"].replace("$", "").replace(",", "")
+                article_info["price"].replace("$", "").replace(",",
+                                                               "")
             )
+
             new_article = Shoe(
                 url=article_info["url"],
                 price=price_decimal,
                 image=article_info["product_image_url"],
-                name=article_info["name"],
+                name=article_info["colorway_name"],
                 article=article,
                 sizes=article_info["sizes"],
             )
             new_article.save()
 
-            user_profile = get_object_or_404(UserProfile, user=request.user)
             user_profile.scraped_articles.add(new_article)
 
-            return render(
-                request,
-                "fetch_page.html",
-                {
-                    "scraped_articles_history": scraped_articles_history,
-                },
-            )
+            serializer = ShoeSerializer(new_article)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
-        elif parsed_articles.filter(article=article):
+        else:
             desired_article = Shoe.objects.get(article=article)
             user_profile.scraped_articles.add(desired_article)
-
-            return render(
-                request,
-                "fetch_page.html",
-                {
-                    "scraped_articles_history": scraped_articles_history,
-                },
-            )
-
-    elif request.method == "GET":
-        return render(
-            request,
-            "fetch_page.html",
-            {"scraped_articles_history": scraped_articles_history},
-        )
+            serializer = ShoeSerializer(desired_article)
+            return Response(serializer.data,
+                            status=status.HTTP_200_OK)

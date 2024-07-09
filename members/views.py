@@ -1,62 +1,76 @@
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.decorators import login_required
-from members.forms import CustomUserCreationForm, CustomAuthenticationForm
-from members.models import UserProfile
+from http import HTTPStatus
+
+from django.contrib.auth import login, logout, authenticate
+# knox imports
+# rest_framework imports
+from rest_framework import permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.utils import get_tokens_for_user
+from restapi.serializers import UserSerializer
 
 
 # Create your views here.
 
 
-def signup_user(request):
-    if request.method == "POST":
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("signup_success")
-    else:
-        form = CustomUserCreationForm()
+class SignUpUserView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-    return render(
-        request,
-        "signup.html",
-        {
-            "form": form,
-        },
-    )
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
 
-
-def signup_success(request):
-    return render(request, "signup_success.html")
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            login(request, user)
+            return Response({"status": HTTPStatus.CREATED,
+                             "refresh": str(refresh),
+                             "access": str(refresh.access_token)})
+        else:
+            return Response({"errors": serializer.errors,
+                             "status": HTTPStatus.BAD_REQUEST})
 
 
-def login_view(request):
-    if request.method == "POST":
-        form = CustomAuthenticationForm(request, request.POST)
-        if form.is_valid():
-            email = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            user = authenticate(request, email=email, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f"Welcome back, {email}!")
-                return redirect("home")
-            else:
-                messages.error(request, "Invalid email or password.")
-    else:
-        form = CustomAuthenticationForm()
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-    return render(request, "login.html", {"form": form})
+    def post(self, request):
+        data = request.data
+        email = data.get('email')
+        password = data.get('password')
+        user = authenticate(email=email, password=password)
 
-
-def logout_view(request):
-    logout(request)
-    return redirect("login")
+        if user and user.is_active:
+            tokens = get_tokens_for_user(user)
+            login(request, user)
+            return Response(
+                {"status": HTTPStatus.OK,
+                 "tokens": tokens})
+        else:
+            return Response(
+                {"status": HTTPStatus.NOT_FOUND})
 
 
-@login_required(login_url="/members/login")
-def user_profile_view(request, user_id):
-    user_profile = get_object_or_404(UserProfile, id=user_id)
+class LogoutView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-    return render(request, "user_profile.html", {"user_profile": user_profile})
+    def get(self, request):
+        logout(request)
+        return Response({"status": HTTPStatus.OK})
+
+    def post(self, request):
+        logout(request)
+        return Response({"status": HTTPStatus.OK})
+
+
+class UserProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get(self, request):
+        user = request.user
+        serializer = self.serializer_class(user)
+        return Response({"status": HTTPStatus.OK,
+                         "user": serializer.data})
