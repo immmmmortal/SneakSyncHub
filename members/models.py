@@ -48,8 +48,10 @@ class UserProfile(models.Model):
         upload_to="profile_pics/", default="default_profile_picture.jpg"
     )
     preferred_sites = models.TextField(default="")
-    scraped_articles = models.ManyToManyField(Shoe,
-                                              related_name="scraped_articles")
+    scraped_articles = models.ManyToManyField(
+        Shoe,
+        related_name="scraped_articles"
+    )
 
     objects = CustomUserManager()
 

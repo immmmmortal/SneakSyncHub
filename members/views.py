@@ -1,21 +1,15 @@
 from http import HTTPStatus
 
 from django.contrib.auth import login, logout, authenticate
-# knox imports
-# rest_framework imports
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 
-from core.utils import get_tokens_for_user
+from core.auth.auth_utils import get_access_token, set_httponly_cookie
 from restapi.serializers import UserSerializer
 
 
-# Create your views here.
-
-
-class SignUpUserView(APIView):
+class CreateUserView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -23,17 +17,16 @@ class SignUpUserView(APIView):
 
         if serializer.is_valid():
             user = serializer.save()
-            refresh = RefreshToken.for_user(user)
             login(request, user)
-            return Response({"status": HTTPStatus.CREATED,
-                             "refresh": str(refresh),
-                             "access": str(refresh.access_token)})
+            return Response({
+                "status": HTTPStatus.CREATED
+            })
         else:
             return Response({"errors": serializer.errors,
                              "status": HTTPStatus.BAD_REQUEST})
 
 
-class LoginView(APIView):
+class ObtainAccessToken(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -43,26 +36,32 @@ class LoginView(APIView):
         user = authenticate(email=email, password=password)
 
         if user and user.is_active:
-            tokens = get_tokens_for_user(user)
             login(request, user)
-            return Response(
-                {"status": HTTPStatus.OK,
-                 "tokens": tokens})
+            access_token = get_access_token(user)
+            response = Response({
+                "status": HTTPStatus.OK,
+            })
+            set_httponly_cookie(access_token, response)
+            return response
         else:
             return Response(
-                {"status": HTTPStatus.NOT_FOUND})
+                {"status": "novibe"})
 
 
 class LogoutView(APIView):
-    permission_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         logout(request)
-        return Response({"status": HTTPStatus.OK})
+        response = Response({"status": HTTPStatus.OK})
+        response.delete_cookie('access_token')
+        return response
 
     def post(self, request):
         logout(request)
-        return Response({"status": HTTPStatus.OK})
+        response = Response({"status": HTTPStatus.OK})
+        response.delete_cookie('access_token')
+        return response
 
 
 class UserProfileView(APIView):

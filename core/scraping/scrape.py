@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from typing import TypedDict
+
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -48,13 +49,13 @@ class SoupExtractorBase(ABC, WebDriver):
         self._setup_driver()
 
     def _set_article_info(self) -> ArticleInfo:
-        article_info = {
-            "url": self.product_url,
-            "price": self.price,
-            "product_image_url": self.colorway_image_url,
-            "name": self.colorway_name,
-            "sizes": list(self.available_sizes),
-        }
+        article_info = ArticleInfo(
+            url=self.product_url,
+            price=self.price,
+            product_image_url=self.colorway_image_url,
+            colorway_name=self.colorway_name,
+            sizes=list(self.available_sizes)
+        )
         return article_info
 
     @abstractmethod
@@ -96,10 +97,12 @@ class NikeSoupExtractor(SoupExtractorBase):
     def extract_article_info(self):
         self.size_inputs = self.product_page.find_all(
             "input",
-            id=lambda x: x and x.startswith(self.html_selectors.product_sizes),
+            id=lambda x: x and x.startswith(
+                self.html_selectors.product_sizes),
         )
         self.colorway_inputs = self.product_page.find(
-            "input", id=(f"{self.html_selectors.products_colors}{self.article}")
+            "input",
+            id=(f"{self.html_selectors.products_colors}{self.article}")
         )
 
         if self.colorway_inputs:

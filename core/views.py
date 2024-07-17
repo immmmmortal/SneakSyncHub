@@ -3,14 +3,16 @@ from decimal import Decimal
 import lorem
 from django.shortcuts import render  # type: ignore
 from rest_framework import status, permissions
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe
 from core.scraping.scrape import ScrapeByArticleNike
 from core.utils import get_user_profile
+from members.models import CustomUser
 from restapi.serializers import ShoeSerializer
 
 
@@ -18,6 +20,9 @@ class HomeView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        for user in CustomUser.objects.all():
+            Token.objects.get_or_create(user=user)
+
         msg = lorem.text()
         return Response({"title": msg})
 
@@ -30,7 +35,7 @@ class ClearUserParsedArticles(APIView):
 
 
 class ShoesView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         scraped_articles = Shoe.objects.all()
@@ -40,17 +45,21 @@ class ShoesView(APIView):
 
 class FetchPageView(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [HttponlyCookieAuthentication]
+
+    # authentication_classes = []
 
     def get(self, request, format=None) -> Response:
         user_profile = get_user_profile(request)
         scraped_articles_history = user_profile.scraped_articles.all()
-        article_data = ShoeSerializer(scraped_articles_history,
-                                      many=True)
+        article_data = ShoeSerializer(scraped_articles_history, many=True)
         return Response(
-            {"article_data": article_data.data, }
+            {
+                "article_data": article_data.data,
+            }
         )
 
+    # @csrf_protect
     def post(self, request) -> Response:
         user_profile = get_user_profile(request)
         article = request.data.get("article")
@@ -65,8 +74,7 @@ class FetchPageView(APIView):
             article_info = scraper.scrape()
 
             price_decimal = Decimal(
-                article_info["price"].replace("$", "").replace(",",
-                                                               "")
+                article_info["price"].replace("$", "").replace(",", "")
             )
 
             new_article = Shoe(
@@ -89,5 +97,4 @@ class FetchPageView(APIView):
             desired_article = Shoe.objects.get(article=article)
             user_profile.scraped_articles.add(desired_article)
             serializer = ShoeSerializer(desired_article)
-            return Response(serializer.data,
-                            status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
