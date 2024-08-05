@@ -4,8 +4,9 @@ from django.contrib.auth import login, logout, authenticate
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from core.auth.auth_utils import get_access_token, set_httponly_cookie
+from SneakSyncHub import settings
+from core.auth.auth_utils import get_access_token, set_httponly_cookie, \
+    UserTokenService, set_authentication_cookie
 from restapi.serializers import UserSerializer
 
 
@@ -38,38 +39,50 @@ class ObtainAccessToken(APIView):
         if user and user.is_active:
             login(request, user)
             access_token = get_access_token(user)
-            response = Response({
+            response = Response(data={
                 "status": HTTPStatus.OK,
+                'message': "Authentication Successful!",
             })
             set_httponly_cookie(access_token, response)
+            set_authentication_cookie(response)
             return response
         else:
             return Response(
-                {"status": "novibe"})
+                {"status": 403,
+                 "message": "Invalid credentials"
+                 })
 
 
 class LogoutView(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         logout(request)
         response = Response({"status": HTTPStatus.OK})
         response.delete_cookie('access_token')
+        response.delete_cookie('is_authenticated')
         return response
 
     def post(self, request):
         logout(request)
         response = Response({"status": HTTPStatus.OK})
         response.delete_cookie('access_token')
+        response.delete_cookie('is_authenticated')
         return response
 
 
 class UserProfileView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        serializer = self.serializer_class(user)
-        return Response({"status": HTTPStatus.OK,
-                         "user": serializer.data})
+        token_service = UserTokenService()
+        access_token = request.COOKIES.get('access_token')
+        validated_token = token_service.get_validated_token(access_token)
+        user = token_service.get_user_from_token(validated_token)
+        serializer = UserSerializer(user)
+
+        return Response({
+            "status": HTTPStatus.OK,
+            "user": serializer.data
+        })

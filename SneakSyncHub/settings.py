@@ -15,6 +15,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 from rest_framework.settings import api_settings
 
 env = environ.environ.Env(
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     'rest_framework.authtoken',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -136,8 +138,23 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOWED_ORIGINGS = [
-    "http://localhost:3000",
+CORS_ALLOWED_ORIGINS = [
+    "https://localhost:3000",
+    "https://127.0.0.1:3000",
+]
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials',
+    'set-cookie',
+    'Set-Cookie',
+)
+
+CORS_EXPOSE_HEADERS = [
+    'Set-Cookie',
+    'set-cookie',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -147,7 +164,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'core.auth.auth_utils.HttponlyCookieAuthentication',
     ),
 }
 

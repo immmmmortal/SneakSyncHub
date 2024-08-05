@@ -3,7 +3,6 @@ from decimal import Decimal
 import lorem
 from django.shortcuts import render  # type: ignore
 from rest_framework import status, permissions
-from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +11,6 @@ from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe
 from core.scraping.scrape import ScrapeByArticleNike
 from core.utils import get_user_profile
-from members.models import CustomUser
 from restapi.serializers import ShoeSerializer
 
 
@@ -20,11 +18,15 @@ class HomeView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        for user in CustomUser.objects.all():
-            Token.objects.get_or_create(user=user)
-
+        access_token = request.COOKIES.get('access_token')
+        csrf_token = request.COOKIES.get('csrftoken')
+        is_auth = request.COOKIES.get('is_authenticated')
         msg = lorem.text()
-        return Response({"title": msg})
+        return Response({"title": msg,
+                         "access_token": access_token,
+                         "csrf_token": csrf_token,
+                         "is_authenticated": is_auth
+                         })
 
 
 class ClearUserParsedArticles(APIView):
@@ -47,8 +49,6 @@ class FetchPageView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [HttponlyCookieAuthentication]
 
-    # authentication_classes = []
-
     def get(self, request, format=None) -> Response:
         user_profile = get_user_profile(request)
         scraped_articles_history = user_profile.scraped_articles.all()
@@ -59,7 +59,6 @@ class FetchPageView(APIView):
             }
         )
 
-    # @csrf_protect
     def post(self, request) -> Response:
         user_profile = get_user_profile(request)
         article = request.data.get("article")
