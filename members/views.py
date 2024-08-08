@@ -45,6 +45,7 @@ class ObtainAccessToken(APIView):
             })
             set_httponly_cookie(access_token, response)
             set_authentication_cookie(response)
+            print(response)
             return response
         else:
             return Response(
@@ -58,14 +59,20 @@ class LogoutView(APIView):
 
     def get(self, request):
         logout(request)
-        response = Response({"status": HTTPStatus.OK})
+        response = Response({
+            "status": HTTPStatus.OK,
+            "message": "Logged out successfully"
+        })
         response.delete_cookie('access_token')
         response.delete_cookie('is_authenticated')
         return response
 
     def post(self, request):
         logout(request)
-        response = Response({"status": HTTPStatus.OK})
+        response = Response({
+            "status": HTTPStatus.OK,
+            "message": "Logged out successfully"
+        })
         response.delete_cookie('access_token')
         response.delete_cookie('is_authenticated')
         return response
