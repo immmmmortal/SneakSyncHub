@@ -3,6 +3,8 @@
 import {toast} from "react-toastify";
 import {useAuth} from "@/app/lib/auth";
 import {useRouter} from "next/navigation";
+import {faArrowRightFromBracket} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 const LogoutButtonComponent = () => {
     const {setAuthenticated} = useAuth()
@@ -28,7 +30,9 @@ const LogoutButtonComponent = () => {
 
     return (
         <button onClick={handleLogout}
-                className="bg-orange-200 rounded-b w-40">
+                className="">
+            <FontAwesomeIcon
+                icon={faArrowRightFromBracket} className="mr-3"/>
             Logout
         </button>
     )

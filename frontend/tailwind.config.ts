@@ -13,6 +13,9 @@ const config: Config = {
                 "gradient-conic":
                     "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
             },
+            flex: {
+                '1-3': '1 3'
+            },
             colors: {
                 'sneakers-second': '#111313',
                 'sneakers-first': '#191b1c',
@@ -22,4 +25,5 @@ const config: Config = {
     },
     plugins: [],
 };
+
 export default config;

@@ -1,9 +1,10 @@
 import type {Metadata} from "next";
 import "./globals.css";
 import React from "react";
-import NavbarComponent from "@/app/components/navbar";
+import ManageUserComponent from "@/app/components/manage_user_icon";
 import {AuthProvider} from "@/app/lib/auth";
 import {ToastContainer} from "react-toastify";
+import MainContentComponent from "@/app/components/main_content";
 
 
 export const metadata: Metadata = {
@@ -18,11 +19,17 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-        <body className="bg-sneakers-second relative">
+        <body className="bg-sneakers-second h-full w-full fixed">
         <AuthProvider>
-            <ToastContainer/>
-            <NavbarComponent/>
-            {children}
+
+            <MainContentComponent>
+                <ToastContainer
+                    position="bottom-right"
+                    theme="dark"
+                />
+                <ManageUserComponent/>
+                {children}
+            </MainContentComponent>
         </AuthProvider>
         </body>
         </html>

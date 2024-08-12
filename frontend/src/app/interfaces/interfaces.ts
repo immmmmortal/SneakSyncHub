@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface submitButtonProps {
     isPending: boolean
 }
@@ -10,4 +12,9 @@ export interface userCredentials {
 export interface responseFormat {
     status: number;
     message: string;
+}
+
+export interface ClickOutsideRefInterface {
+    sidebarRef: React.RefObject<HTMLDivElement>
+    openButtonRef: React.RefObject<HTMLDivElement>
 }

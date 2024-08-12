@@ -93,8 +93,12 @@ export const authenticate = async (
                 message: data.message,
             }
         }
-        console.log(data)
         
+        return {
+            status: data.status,
+            message: data.message,
+        }
+
     } catch (error) {
         return {
             status: 500,
@@ -102,7 +106,6 @@ export const authenticate = async (
         };
     }
 
-    return redirect("/");
 };
 
 
