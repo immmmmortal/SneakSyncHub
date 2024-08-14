@@ -347,7 +347,7 @@
                  *   alias: 'Hexadecimal',
                  *   bmp: '0-9A-Fa-f'
                  * }]);
-                 * XRegExp('\\p{XDigit}:\\p{Hexadecimal}+').test.tsx('0:3D'); // -> true
+                 * XRegExp('\\p{XDigit}:\\p{Hexadecimal}+').test.html.tsx('0:3D'); // -> true
                  */
 
                 XRegExp.addUnicodeData = function (data, typePrefix) {
@@ -1358,7 +1358,7 @@
              *   () => '\\x07',
              *   {scope: 'all'}
              * );
-             * XRegExp('\\a[\\a-\\n]+').test.tsx('\x07\n\x07'); // -> true
+             * XRegExp('\\a[\\a-\\n]+').test.html.tsx('\x07\n\x07'); // -> true
              *
              * // Add the U (ungreedy) flag from PCRE and RE2, which reverses greedy and lazy quantifiers.
              * // Since `scope` is not specified, it uses 'default' (i.e., transformations apply outside of
@@ -1975,7 +1975,7 @@
              * `sticky` arguments specify the search start position, and whether the match must start at the
              * specified position only. The `lastIndex` property of the provided regex is not used, but is
              * updated for compatibility. Also fixes browser bugs compared to the native
-             * `RegExp.prototype.test.tsx` and can be used reliably cross-browser.
+             * `RegExp.prototype.test.html.tsx` and can be used reliably cross-browser.
              *
              * @memberOf XRegExp
              * @param {String} str String to search.
@@ -1987,11 +1987,11 @@
              * @example
              *
              * // Basic use
-             * XRegExp.test.tsx('abc', /c/); // -> true
+             * XRegExp.test.html.tsx('abc', /c/); // -> true
              *
              * // With pos and sticky
-             * XRegExp.test.tsx('abc', /c/, 0, 'sticky'); // -> false
-             * XRegExp.test.tsx('abc', /c/, 2, 'sticky'); // -> true
+             * XRegExp.test.html.tsx('abc', /c/, 0, 'sticky'); // -> false
+             * XRegExp.test.html.tsx('abc', /c/, 2, 'sticky'); // -> true
              */
 // Do this the easy way :-)
 
@@ -2191,7 +2191,7 @@
                 return match;
             };
             /**
-             * Fixes browser bugs in the native `RegExp.prototype.test.tsx`.
+             * Fixes browser bugs in the native `RegExp.prototype.test.html.tsx`.
              *
              * @memberOf RegExp
              * @param {String} str String to search.

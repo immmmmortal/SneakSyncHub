@@ -2,9 +2,19 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from typing import TypedDict
 
+import re
+
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+
+
+class ArticleInfo(TypedDict):
+    url: str
+    price: str
+    product_image_url: str | list[str] | None
+    colorway_name: str | list[str] | None
+    sizes: list[str] | None
 
 
 class WebDriver:
@@ -24,14 +34,6 @@ class WebDriver:
         product_html_source = self.driver.page_source
         self.driver.quit()
         return product_html_source
-
-
-class ArticleInfo(TypedDict):
-    url: str
-    price: str
-    product_image_url: str
-    colorway_name: str
-    sizes: list[str]
 
 
 class SoupExtractorBase(ABC, WebDriver):
@@ -76,9 +78,9 @@ class NikeSoupExtractor(SoupExtractorBase):
         super().__init__()
         self.html_selectors = self.html_selectors_tuple(
             products_list="product-card__body",
-            product_price="product-price",
+            product_price="price-container",
             product_sizes="skuAndSize",
-            products_colors="nr-pdp-colorway-",
+            products_colors="colorway-chip-",
             alternative_div_img_tag="pdp-6-up",
         )
 
@@ -95,27 +97,27 @@ class NikeSoupExtractor(SoupExtractorBase):
         self.product_page = BeautifulSoup(product_html, "html.parser")
 
     def extract_article_info(self):
-        self.size_inputs = self.product_page.find_all(
-            "input",
-            id=lambda x: x and x.startswith(
-                self.html_selectors.product_sizes),
+        self.size_inputs_divs = self.product_page.find_all(
+            'div',
+            class_='nds-grid-item'
         )
-        self.colorway_inputs = self.product_page.find(
-            "input",
-            id=(f"{self.html_selectors.products_colors}{self.article}")
+        self.colorway_img_element = self.product_page.find(
+            "img",
+            id=f"{self.html_selectors.products_colors}{self.article}"
         )
 
-        if self.colorway_inputs:
-            self.image_tag = self.colorway_inputs.find_next_sibling().find_next()
+        if self.colorway_img_element:
+            self.colorway_image_url = self.colorway_img_element.get('src')
+            self.colorway_name = self.colorway_img_element.get('alt')
         else:
-            images_div = self.product_page.find("div", id=("pdp-6-up"))
+            images_div = self.product_page.find("div", id="pdp-6-up")
             self.image_tag = images_div.next_element
+            self.colorway_image_url = self.image_tag.get("src")
+            self.colorway_name = self.image_tag.get("alt")
 
-        self.colorway_image_url = self.image_tag.get("src")
-        self.colorway_name = self.image_tag.get("alt")
         self.price = self.product_page.find(
-            "div", class_=self.html_selectors.product_price
-        ).get_text()
+            "div", id=self.html_selectors.product_price
+        ).next_element.get_text()
 
 
 class ScraperBase(ABC):
@@ -147,22 +149,29 @@ class ScrapeByArticleNike(ScraperBase, NikeSoupExtractor):
         NikeSoupExtractor.__init__(self)
 
     def extract_available_sizes(self):
-        for field in self.size_inputs:
-            if not field.has_attr("disabled"):
-                label = field.find_next()
-                size = label.get_text()
-                self.available_sizes.append(size)
+        for div in self.size_inputs_divs:
+            if 'disabled' in div['class']:
+                continue
+
+                # Find the associated label and extract size
+            label = div.find('label')
+            if label:
+                size_text = label.get_text(strip=True)
+                # Extract sizes using regex
+                sizes = re.findall(r'\d+\.?\d*', size_text)
+                self.available_sizes.extend(sizes)
 
     def scrape(self):
         self.extract_product_page()
         self.extract_article_info()
         self.extract_available_sizes()
 
+        article_info: ArticleInfo
         article_info = {
             "url": self.product_url,
             "price": self.price,
             "product_image_url": self.colorway_image_url,
-            "name": self.colorway_name,
+            "colorway_name": self.colorway_name,
             "sizes": list(self.available_sizes),
         }
 

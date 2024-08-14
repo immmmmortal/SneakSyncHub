@@ -25,7 +25,6 @@ def set_authentication_cookie(response: Response):
     response.set_cookie(
         key='is_authenticated',
         value='true',
-        max_age=1800,
         expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
         samesite='None',
         secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],

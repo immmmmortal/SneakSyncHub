@@ -11,6 +11,7 @@ import {
     faWandMagicSparkles
 } from "@fortawesome/free-solid-svg-icons";
 import ManageUserComponent from "@/app/components/manage_user_icon";
+import Link from "next/link";
 
 const MainContentComponent: React.FC<{
     children: React.ReactNode
@@ -30,14 +31,14 @@ const MainContentComponent: React.FC<{
                     isOpen ? 'w-1/4' : 'w-0'
                 } z-0 overflow-hidden`}
             >
-                <div>
+                <div className="ml-1">
                     <FontAwesomeIcon
                         icon={faBars}
                         className="fa-xl cursor-pointer p-4 text-white"
                         onClick={() => setIsOpen(!isOpen)}
                     />
                 </div>
-                <ul className="flex text-nowrap flex-grow mr-1 ml-1 flex-col [&_li]:p-3">
+                <ul className="flex text-nowrap flex-grow mr-1 ml-2 flex-col [&_li]:p-3">
                     <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
                         <FontAwesomeIcon className="mr-3" icon={faHouse}/>
                         SneakSyncHub
@@ -45,7 +46,7 @@ const MainContentComponent: React.FC<{
                     <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
                         <FontAwesomeIcon className="mr-3"
                                          icon={faMagnifyingGlass}/>
-                        Search
+                        <Link href="/search">Search</Link>
                     </li>
                     <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
                         <FontAwesomeIcon className="mr-3" icon={faGear}/>
@@ -57,7 +58,7 @@ const MainContentComponent: React.FC<{
                         About
                     </li>
                 </ul>
-                <footer className="text-nowrap mr-1 ml-1 mb-1 flex">
+                <footer className="text-nowrap mr-1 ml-2 mb-1 flex">
                     <div
                         className="hover:bg-sneakers-second hover:rounded-2xl w-full flex flex-row p-3">
                         <div className="flex items-center">
@@ -83,7 +84,7 @@ const MainContentComponent: React.FC<{
                     />
                 )}
                 <div
-                    className={`flex-1 transition-all duration-200 ease-in-out ${
+                    className={`flex-1  p-3 transition-all duration-200 ease-in-out ${
                         isOpen ? 'ml-1/4' : 'ml-0'
                     }`}
                 >

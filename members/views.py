@@ -44,7 +44,7 @@ class ObtainAccessToken(APIView):
                 'message': "Authentication Successful!",
             })
             set_httponly_cookie(access_token, response)
-            set_authentication_cookie(response)
+            # set_authentication_cookie(response)
             print(response)
             return response
         else:

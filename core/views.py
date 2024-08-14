@@ -30,9 +30,9 @@ class HomeView(APIView):
 
 
 class ClearUserParsedArticles(APIView):
-    def post(self, request):
+    def delete(self, request):
         user_profile = get_user_profile(request)
-        user_profile.scraped_articles.delete()
+        user_profile.scraped_articles.all().delete()
         return Response(status=status.HTTP_200_OK)
 
 

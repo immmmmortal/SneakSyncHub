@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import defaultUserProfileIcon
     from '../static/images/default_profile_picture.jpg';
@@ -15,17 +15,18 @@ const UserProfileIcon: React.FC<ClickOutsideRefInterface> = ({
                                                              }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const userProfilePicRef = useRef<HTMLImageElement>(null);
 
     const toggleDropdown = () => {
         setIsDropdownOpen(prev => !prev);
     };
 
     const handleClickOutside = (event: MouseEvent) => {
-        // Check if click is outside dropdown and not on sidebar or open button
         if (
             dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
             (!sidebarRef.current || !sidebarRef.current.contains(event.target as Node)) &&
-            (!openButtonRef.current || !openButtonRef.current.contains(event.target as Node))
+            (!openButtonRef.current || !openButtonRef.current.contains(event.target as Node)) &&
+            (!userProfilePicRef.current || !userProfilePicRef.current.contains(event.target as Node))
         ) {
             setIsDropdownOpen(false);
         }
@@ -38,10 +39,18 @@ const UserProfileIcon: React.FC<ClickOutsideRefInterface> = ({
         };
     }, []);
 
+    const handleProfileClick = (event: React.MouseEvent) => {
+        // Stop click event propagation to prevent conflicts
+        event.stopPropagation();
+        // Toggle dropdown state
+        toggleDropdown();
+    };
+
     return (
         <div className="relative cursor-pointer">
             <Image
-                onClick={toggleDropdown}
+                ref={userProfilePicRef}
+                onClick={handleProfileClick}
                 className="w-10 h-auto rounded-full"
                 src={defaultUserProfileIcon}
                 alt="defaultImage"

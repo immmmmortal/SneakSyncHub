@@ -27,7 +27,6 @@ export default function RootLayout({
                     position="bottom-right"
                     theme="dark"
                 />
-                <ManageUserComponent/>
                 {children}
             </MainContentComponent>
         </AuthProvider>

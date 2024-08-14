@@ -1148,7 +1148,7 @@
             // Support: IE <10
             // Check if getElementById returns elements by name
             // The broken getElementById methods don't pick up programmatically-set names,
-            // so use a roundabout getElementsByName test.tsx
+            // so use a roundabout getElementsByName test.html.tsx
             support.getById = assert(function (el) {
                 documentElement.appendChild(el).id = jQuery.expando;
                 return !document.getElementsByName ||
@@ -1170,7 +1170,7 @@
 
             // Support: Chrome 105 - 111 only, Safari 15.4 - 16.3 only
             // Make sure the `:has()` argument is parsed unforgivingly.
-            // We include `*` in the test.tsx to detect buggy implementations that are
+            // We include `*` in the test.html.tsx to detect buggy implementations that are
             // _selectively_ forgiving (specifically when the list includes at least
             // one valid selector).
             // Note that we treat complete lack of support for `:has()` as if it were
@@ -6373,7 +6373,7 @@
             // IE/Edge misreport `getComputedStyle` of table rows with width/height
             // set in CSS while `offset*` properties report correct values.
             // Behavior in IE 9 is more subtle than in newer versions & it passes
-            // some versions of this test.tsx; make sure not to make it pass there!
+            // some versions of this test.html.tsx; make sure not to make it pass there!
             //
             // Support: Firefox 70+
             // Only Firefox includes border widths
@@ -6518,7 +6518,7 @@
                     return;
                 }
 
-                // Hook needed; redefine it so that the support test.tsx is not executed again.
+                // Hook needed; redefine it so that the support test.html.tsx is not executed again.
                 return (this.get = hookFn).apply(this, arguments);
             }
         };
@@ -6932,7 +6932,7 @@
                 var matches,
                     styles = getStyles(elem),
 
-                    // Only read styles.position if the test.tsx has a chance to fail
+                    // Only read styles.position if the test.html.tsx has a chance to fail
                     // to avoid forcing a reflow.
                     scrollboxSizeBuggy = !support.scrollboxSize() &&
                         styles.position === "absolute",

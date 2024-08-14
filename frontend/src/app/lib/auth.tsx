@@ -1,7 +1,5 @@
 'use client'
 
-import {responseFormat, userCredentials} from "@/app/interfaces/interfaces";
-import {redirect} from "next/navigation";
 import React, {
     createContext,
     ReactNode,
@@ -9,6 +7,7 @@ import React, {
     useEffect,
     useState
 } from 'react';
+import {responseFormat, userCredentials} from "@/app/interfaces/interfaces";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -38,13 +37,16 @@ export const AuthProvider: React.FC<{
 
     const setAuthenticated = (auth: boolean) => {
         if (auth) {
-            document.cookie = "is_authenticated=true; path=/";
+            const expirationDate = new Date();
+            expirationDate.setTime(expirationDate.getTime() + 30 * 60 * 1000); // Add 30 minutes in milliseconds
+            document.cookie = `is_authenticated=true; expires=${expirationDate.toUTCString()}; path=/`;
         } else {
             document.cookie = "is_authenticated=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
         setIsAuthenticatedState(auth);
         window.dispatchEvent(new Event('cookieChange'));
     };
+
 
     if (loading) {
         return null; // or a loading spinner
@@ -93,7 +95,7 @@ export const authenticate = async (
                 message: data.message,
             }
         }
-        
+
         return {
             status: data.status,
             message: data.message,
