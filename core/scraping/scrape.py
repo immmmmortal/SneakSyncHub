@@ -79,7 +79,7 @@ class NikeSoupExtractor(SoupExtractorBase):
         self.html_selectors = self.html_selectors_tuple(
             products_list="product-card__body",
             product_price="price-container",
-            product_sizes="skuAndSize",
+            product_sizes="pdp-grid-selector-grid",
             products_colors="colorway-chip-",
             alternative_div_img_tag="pdp-6-up",
         )
@@ -97,9 +97,9 @@ class NikeSoupExtractor(SoupExtractorBase):
         self.product_page = BeautifulSoup(product_html, "html.parser")
 
     def extract_article_info(self):
-        self.size_inputs_divs = self.product_page.find_all(
+        self.size_inputs_div = self.product_page.find(
             'div',
-            class_='nds-grid-item'
+            class_=self.html_selectors.product_sizes
         )
         self.colorway_img_element = self.product_page.find(
             "img",
@@ -110,8 +110,8 @@ class NikeSoupExtractor(SoupExtractorBase):
             self.colorway_image_url = self.colorway_img_element.get('src')
             self.colorway_name = self.colorway_img_element.get('alt')
         else:
-            images_div = self.product_page.find("div", id="pdp-6-up")
-            self.image_tag = images_div.next_element
+            images_div = self.product_page.find("div", id="hero-image")
+            self.image_tag = images_div.find('img')
             self.colorway_image_url = self.image_tag.get("src")
             self.colorway_name = self.image_tag.get("alt")
 
@@ -149,17 +149,15 @@ class ScrapeByArticleNike(ScraperBase, NikeSoupExtractor):
         NikeSoupExtractor.__init__(self)
 
     def extract_available_sizes(self):
-        for div in self.size_inputs_divs:
-            if 'disabled' in div['class']:
-                continue
+        # Find all child divs, excluding the first one
+        child_divs = self.size_inputs_div.find_all('div', recursive=False)[
+                     1:]
 
-                # Find the associated label and extract size
-            label = div.find('label')
-            if label:
-                size_text = label.get_text(strip=True)
-                # Extract sizes using regex
-                sizes = re.findall(r'\d+\.?\d*', size_text)
-                self.available_sizes.extend(sizes)
+        for div in child_divs:
+            if 'disabled' not in div.get('class'):
+                label = div.find('label')
+                if label:
+                    self.available_sizes.append(label.get_text(strip=True))
 
     def scrape(self):
         self.extract_product_page()
