@@ -9,8 +9,9 @@ from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe
-from core.scraping.scrape import ScrapeByArticleNike
+from core.scraping.scrape import NikeScraper
 from core.utils import get_user_profile
+from members.models import CustomUser, UserProfile
 from restapi.serializers import ShoeSerializer
 
 
@@ -27,6 +28,39 @@ class HomeView(APIView):
                          "csrf_token": csrf_token,
                          "is_authenticated": is_auth
                          })
+
+
+class ShoeDetailedAPIView(APIView):
+    def get(self, request, id):
+        try:
+            shoe = Shoe.objects.get(id=id)
+            serializer = ShoeSerializer(shoe)
+            return Response(serializer.data)
+        except Shoe.DoesNotExist:
+            return Response({'detail': 'Not found.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+
+class ParsedShoeDeleteAPIView(APIView):
+    def delete(self, request, id):
+        try:
+            # Get the user profile from the request
+            user_profile = get_user_profile(request)
+
+            # Get the shoe instance associated with the user's profile
+            shoe = user_profile.scraped_articles.get(id=id)
+
+            # Remove the shoe from the user's scraped_articles
+            user_profile.scraped_articles.remove(shoe)
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        except Shoe.DoesNotExist:
+            return Response({'detail': 'Not found.'},
+                            status=status.HTTP_404_NOT_FOUND)
+        except UserProfile.DoesNotExist:
+            return Response({'detail': 'User profile not found.'},
+                            status=status.HTTP_404_NOT_FOUND)
 
 
 class ClearUserParsedArticles(APIView):
@@ -49,10 +83,12 @@ class FetchPageView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [HttponlyCookieAuthentication]
 
-    def get(self, request, format=None) -> Response:
+    def get(self, request) -> Response:
         user_profile = get_user_profile(request)
-        scraped_articles_history = user_profile.scraped_articles.all()
-        article_data = ShoeSerializer(scraped_articles_history, many=True)
+        scraped_articles_history = user_profile.scraped_articles.all().order_by(
+            '-created_at')
+        article_data = ShoeSerializer(scraped_articles_history,
+                                      many=True)
         return Response(
             {
                 "article_data": article_data.data,
@@ -62,14 +98,12 @@ class FetchPageView(APIView):
     def post(self, request) -> Response:
         user_profile = get_user_profile(request)
         article = request.data.get("article")
-        parsed_articles = Shoe.objects.all()
 
-        if "clear_articles" in request.data:
-            user_profile.scraped_articles.clear()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        existing_article = Shoe.objects.filter(article=article).first()
 
-        if not parsed_articles.filter(article=article).exists():
-            scraper = ScrapeByArticleNike(article)
+        if not existing_article:
+            # Article does not exist, so scrape and add it
+            scraper = NikeScraper(article)
             article_info = scraper.scrape()
 
             price_decimal = Decimal(
@@ -83,6 +117,7 @@ class FetchPageView(APIView):
                 name=article_info["colorway_name"],
                 article=article,
                 sizes=article_info["sizes"],
+                parsed_from="Nike"
             )
             new_article.save()
 
@@ -91,9 +126,8 @@ class FetchPageView(APIView):
             serializer = ShoeSerializer(new_article)
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
-
         else:
-            desired_article = Shoe.objects.get(article=article)
-            user_profile.scraped_articles.add(desired_article)
-            serializer = ShoeSerializer(desired_article)
+            # Article already exists, add it to the user's profile
+            user_profile.scraped_articles.add(existing_article)
+            serializer = ShoeSerializer(existing_article)
             return Response(serializer.data, status=status.HTTP_200_OK)

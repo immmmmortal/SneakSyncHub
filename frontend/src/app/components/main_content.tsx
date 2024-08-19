@@ -24,12 +24,12 @@ const MainContentComponent: React.FC<{
 
 
     return (
-        <div className="flex flex-row h-full w-full">
+        <div className="flex flex-row overflow-auto h-full w-full">
             <div
                 ref={sidebarRef}
-                className={`transition-all flex text-gray-300 flex-col duration-200 ease-in-out bg-sneakers-first ${
-                    isOpen ? 'w-1/4' : 'w-0'
-                } z-0 overflow-hidden`}
+                className={`transition-all flex-shrink-0 flex text-gray-300 flex-col duration-300 ease-in-out bg-sneakers-first ${
+                    isOpen ? 'w-1/5' : 'w-0'
+                } z-50 overflow-hidden`}
             >
                 <div className="ml-1">
                     <FontAwesomeIcon
@@ -58,7 +58,7 @@ const MainContentComponent: React.FC<{
                         About
                     </li>
                 </ul>
-                <footer className="text-nowrap mr-1 ml-2 mb-1 flex">
+                <footer className="text-nowrap mr-1 ml-2 mb-2 flex">
                     <div
                         className="hover:bg-sneakers-second hover:rounded-2xl w-full flex flex-row p-3">
                         <div className="flex items-center">
@@ -74,7 +74,8 @@ const MainContentComponent: React.FC<{
                     </div>
                 </footer>
             </div>
-            <div className="flex h-full w-full" ref={contentRef}>
+            <div className="flex h-full w-full "
+                 ref={contentRef}>
                 {!isOpen && (
                     <FontAwesomeIcon
                         icon={faBars}
@@ -84,9 +85,7 @@ const MainContentComponent: React.FC<{
                     />
                 )}
                 <div
-                    className={`flex-1  p-3 transition-all duration-200 ease-in-out ${
-                        isOpen ? 'ml-1/4' : 'ml-0'
-                    }`}
+                    className={`flex-1  p-3 transition-all duration-200 ease-in-out `}
                 >
                     {children}
                 </div>

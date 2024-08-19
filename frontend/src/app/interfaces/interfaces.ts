@@ -18,3 +18,13 @@ export interface ClickOutsideRefInterface {
     sidebarRef: React.RefObject<HTMLDivElement>
     openButtonRef: React.RefObject<HTMLDivElement>
 }
+
+export interface Shoe {
+    id: number;
+    name: string;
+    price: string;
+    url: string;
+    image: string;
+    article: string;
+    sizes: string;
+}

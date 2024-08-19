@@ -44,8 +44,7 @@ class SoupExtractorBase(ABC, WebDriver):
                 "products_list",
                 "product_price",
                 "product_sizes",
-                "products_colors",
-                "alternative_div_img_tag",
+                "product_image",
             ],
         )
         self._setup_driver()
@@ -80,8 +79,7 @@ class NikeSoupExtractor(SoupExtractorBase):
             products_list="product-card__body",
             product_price="price-container",
             product_sizes="pdp-grid-selector-grid",
-            products_colors="colorway-chip-",
-            alternative_div_img_tag="pdp-6-up",
+            product_image='hero-image',
         )
 
     def extract_product_url(self) -> str:
@@ -101,19 +99,17 @@ class NikeSoupExtractor(SoupExtractorBase):
             'div',
             class_=self.html_selectors.product_sizes
         )
-        self.colorway_img_element = self.product_page.find(
-            "img",
-            id=f"{self.html_selectors.products_colors}{self.article}"
+        product_image_div = self.product_page.find(
+            id=self.html_selectors.product_image)
+        self.product_image_element = product_image_div.find(
+            "img"
         )
 
-        if self.colorway_img_element:
-            self.colorway_image_url = self.colorway_img_element.get('src')
-            self.colorway_name = self.colorway_img_element.get('alt')
-        else:
-            images_div = self.product_page.find("div", id="hero-image")
-            self.image_tag = images_div.find('img')
-            self.colorway_image_url = self.image_tag.get("src")
-            self.colorway_name = self.image_tag.get("alt")
+        try:
+            self.colorway_image_url = self.product_image_element.get('src')
+            self.colorway_name = self.product_image_element.get('alt')
+        except AttributeError:
+            raise "Failed to extract product image"
 
         self.price = self.product_page.find(
             "div", id=self.html_selectors.product_price
@@ -141,7 +137,7 @@ class ScraperBase(ABC):
         pass
 
 
-class ScrapeByArticleNike(ScraperBase, NikeSoupExtractor):
+class NikeScraper(ScraperBase, NikeSoupExtractor):
     _SEARCH_PAGE_URL_TEMPLATE = "https://www.nike.com/w?q={0}&vst={1}"
 
     def __init__(self, article):
@@ -149,15 +145,35 @@ class ScrapeByArticleNike(ScraperBase, NikeSoupExtractor):
         NikeSoupExtractor.__init__(self)
 
     def extract_available_sizes(self):
-        # Find all child divs, excluding the first one
-        child_divs = self.size_inputs_div.find_all('div', recursive=False)[
-                     1:]
+        child_divs = self.size_inputs_div.find_all('div', recursive=False)
 
         for div in child_divs:
-            if 'disabled' not in div.get('class'):
+            if 'disabled' not in div.get('class', []):
                 label = div.find('label')
                 if label:
-                    self.available_sizes.append(label.get_text(strip=True))
+                    size_text = label.get_text(strip=True)
+
+                    # Normalize the size text
+                    normalized_size = self.normalize_size(size_text)
+                    if normalized_size:
+                        self.available_sizes.append(normalized_size)
+
+    def normalize_size(self, size_text):
+        # Remove letter 'M' and any extra spaces
+        size_text = size_text.replace('M', '').strip()
+
+        # If the size includes a slash (indicating multiple formats), split and take the first part
+        if '/' in size_text:
+            size_text = size_text.split('/')[0].strip()
+
+        # Remove spaces and return only numeric size
+        size_text = size_text.replace(' ', '')
+
+        # Validate if size_text is numeric or a valid size format
+        if size_text.replace('.', '', 1).isdigit():
+            return size_text
+
+        return None
 
     def scrape(self):
         self.extract_product_page()

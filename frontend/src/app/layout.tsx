@@ -1,11 +1,10 @@
 import type {Metadata} from "next";
 import "./globals.css";
 import React from "react";
-import ManageUserComponent from "@/app/components/manage_user_icon";
 import {AuthProvider} from "@/app/lib/auth";
 import {ToastContainer} from "react-toastify";
 import MainContentComponent from "@/app/components/main_content";
-
+import 'react-tooltip/dist/react-tooltip.css'
 
 export const metadata: Metadata = {
     title: "SneakSyncHub",
@@ -21,7 +20,6 @@ export default function RootLayout({
         <html lang="en">
         <body className="bg-sneakers-second h-full w-full fixed">
         <AuthProvider>
-
             <MainContentComponent>
                 <ToastContainer
                     position="bottom-right"

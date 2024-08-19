@@ -11,4 +11,9 @@ urlpatterns = [
     path('api/shoes', views.ShoesView.as_view(), name="view_shoes"),
     path('api/shoes/clear', views.ClearUserParsedArticles.as_view(),
          name="clear_user_parsed_articles"),
+    path('api/shoes/<int:id>/delete/',
+         views.ParsedShoeDeleteAPIView.as_view(),
+         name='shoe-delete'),
+    path('api/shoes/<int:id>/', views.ShoeDetailedAPIView.as_view(),
+         name='shoe-detail'),
 ]
