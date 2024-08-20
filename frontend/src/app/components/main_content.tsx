@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
     faBars,
@@ -13,84 +13,100 @@ import {
 import ManageUserComponent from "@/app/components/manage_user_icon";
 import Link from "next/link";
 
+
 const MainContentComponent: React.FC<{
     children: React.ReactNode
 }> = ({children}) => {
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
-    const userProfileRef = useRef<HTMLDivElement>(null); //
-    const openButtonRef = useRef<HTMLDivElement>(null); //
+    const openButtonRef = useRef<HTMLImageElement>(null);
 
+    useEffect(() => {
+        if (isOpen) {
+            setIsTransitioning(true);
+        } else {
+            const timer = setTimeout(() => setIsTransitioning(false), 300); // Match animation duration
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
 
     return (
-        <div className="flex flex-row overflow-auto h-full w-full">
+        <div className="relative flex overflow-auto h-full w-full">
+            {/* Sidebar */}
             <div
                 ref={sidebarRef}
-                className={`transition-all flex-shrink-0 flex text-gray-300 flex-col duration-300 ease-in-out bg-sneakers-first ${
-                    isOpen ? 'w-1/5' : 'w-0'
-                } z-50 overflow-hidden`}
+                className={`fixed will-change-transform top-0 left-0 h-full transition-transform duration-300 ease-in-out bg-sneakers-first z-50 flex flex-col text-gray-300 ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+                style={{width: '16rem'}} // Fixed width for the sidebar
             >
-                <div className="ml-1">
-                    <FontAwesomeIcon
-                        icon={faBars}
-                        className="fa-xl cursor-pointer p-4 text-white"
-                        onClick={() => setIsOpen(!isOpen)}
-                    />
-                </div>
-                <ul className="flex text-nowrap flex-grow mr-1 ml-2 flex-col [&_li]:p-3">
-                    <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
-                        <FontAwesomeIcon className="mr-3" icon={faHouse}/>
+
+                <ul className="[&_li]:p-3 mt-24 flex-grow flex flex-col gap-2 p-2 text-white">
+                    <li className="hover:bg-sneakers-second hover:rounded-2xl">
+                        <FontAwesomeIcon icon={faHouse} className="mr-2"/>
                         SneakSyncHub
                     </li>
-                    <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
-                        <FontAwesomeIcon className="mr-3"
-                                         icon={faMagnifyingGlass}/>
-                        <Link href="/search">Search</Link>
-                    </li>
-                    <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
-                        <FontAwesomeIcon className="mr-3" icon={faGear}/>
+                    <Link href="/search"
+                          className="hover:bg-sneakers-second hover:rounded-2xl">
+                        <li>
+                            <FontAwesomeIcon icon={faMagnifyingGlass}
+                                             className="mr-2"/>Search
+                        </li>
+                    </Link>
+                    <li className="hover:bg-sneakers-second hover:rounded-2xl">
+                        <FontAwesomeIcon icon={faGear} className="mr-2"/>
                         Settings
                     </li>
-                    <li className="hover:bg-sneakers-second hover:rounded-2xl w-full">
-                        <FontAwesomeIcon className="mr-3"
-                                         icon={faCircleInfo}/>
+                    <li className="hover:bg-sneakers-second hover:rounded-2xl">
+                        <FontAwesomeIcon icon={faCircleInfo}
+                                         className="mr-2"/>
                         About
                     </li>
                 </ul>
-                <footer className="text-nowrap mr-1 ml-2 mb-2 flex">
-                    <div
-                        className="hover:bg-sneakers-second hover:rounded-2xl w-full flex flex-row p-3">
-                        <div className="flex items-center">
-                            <FontAwesomeIcon className="mr-3"
-                                             icon={faWandMagicSparkles}/>
-                        </div>
-                        <div className="flex flex-col">
-                            <div>Upgrade Plan</div>
-                            <div className="text-xs text-gray-400">Get
-                                limited features
-                            </div>
-                        </div>
+                <footer className="p-3 text-white">
+                    <div className="hover:bg-sneakers-second rounded-xl p-3">
+                        <FontAwesomeIcon icon={faWandMagicSparkles}
+                                         className="mr-2"/>
+                        Upgrade Plan
                     </div>
                 </footer>
             </div>
-            <div className="flex h-full w-full "
-                 ref={contentRef}>
-                {!isOpen && (
-                    <FontAwesomeIcon
-                        icon={faBars}
-                        ref={openButtonRef}
-                        className="fa-xl cursor-pointer p-4"
-                        onClick={() => setIsOpen(!isOpen)}
-                    />
-                )}
-                <div
-                    className={`flex-1  p-3 transition-all duration-200 ease-in-out `}
+
+            {/* Main Content Area */}
+            <div
+                ref={contentRef}
+                className={`flex-1 transition-all duration-300 ease-in-out ${
+                    isOpen ? 'ml-64' : 'ml-0'
+                }`}
+            >
+                {/* Button for opening sidebar */}
+                <button
+                    className={`fixed top-3.5 left-3 p-2 text-white rounded z-50 transition-transform duration-300 ease-in-out`}
+                    onClick={() => setIsOpen(true)}
                 >
+                    <FontAwesomeIcon icon={faBars} className="text-2xl"/>
+                </button>
+
+                {/* Button for closing sidebar */}
+                <button
+                    className={`fixed top-3.5 left-3 p-2 text-white rounded z-50 transition-transform duration-300 ease-in-out ${
+                        isOpen ? '' : 'hidden'
+                    }`}
+                    onClick={() => setIsOpen(false)}
+                >
+                    <FontAwesomeIcon icon={faBars}
+                                     className="text-2xl"/>
+                </button>
+
+                <div className="ml-14 mt-1">
                     {children}
                 </div>
             </div>
-            <div ref={userProfileRef}>
+
+            {/* Manage User Component */}
+            <div>
                 <ManageUserComponent sidebarRef={sidebarRef}
                                      openButtonRef={openButtonRef}/>
             </div>

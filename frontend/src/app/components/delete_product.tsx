@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import {faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {toast} from "react-toastify";
+import {Tooltip} from "react-tooltip";
 
 const DeleteProductButtonComponent = ({
                                           id,
@@ -41,7 +42,9 @@ const DeleteProductButtonComponent = ({
                     className="w-4 h-4 border-4 border-t-4 border-t-white border-transparent rounded-full animate-spin"
                 ></div>
             ) : (
-                <FontAwesomeIcon icon={faTrashCan}/>
+                <FontAwesomeIcon icon={faTrashCan}
+                                 data-tooltip-id="delete-shoe-tooltip"
+                                 data-tooltip-content="Delete current shoe"/>
             )}
         </button>
     );

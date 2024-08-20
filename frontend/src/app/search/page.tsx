@@ -1,11 +1,12 @@
 'use client'
 
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Shoe} from "@/app/interfaces/interfaces";
 import ArticleInfoComponent from "@/app/components/article_info";
 import SearchBarComponent from "@/app/components/search_bar";
 import FilterSectionComponent from "@/app/components/filter_section";
 import {toast} from "react-toastify";
+import DefaultViewComponent from "@/app/components/default_view";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
@@ -35,7 +36,7 @@ const SearchPage = () => {
                 }
             } catch (error) {
                 setError(`Failed to fetch shoes`);
-                toast.error(error)
+                toast.error(error as string);
             } finally {
                 setLoading(false);
             }
@@ -60,7 +61,7 @@ const SearchPage = () => {
 
             if (!response.ok) {
                 setError(`HTTP error! Status: ${response.status}`);
-                toast.error(error)
+                toast.error(error as string);
                 return;
             }
 
@@ -72,19 +73,19 @@ const SearchPage = () => {
                 setShoes(prevShoes => [article_data, ...prevShoes]); // Prepend the single new item
             } else {
                 setError('Unexpected response format');
-                toast.error(error)
+                toast.error(error as string);
             }
         } catch (error) {
             console.error('Error:', error);
             setError('An error occurred while fetching the data. Please try again.');
-            toast.error(error)
+            toast.error(error as string);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (id: number) => {
-        setError(null)
+        setError(null);
 
         try {
             const response = await fetch(`https://localhost:8000/api/shoes/${id}/delete`, {
@@ -100,15 +101,15 @@ const SearchPage = () => {
             }
         } catch (error) {
             setError('An error occurred while deleting the shoe. Please try again.');
-            toast.error('Error:' + error);
+            toast.error('Error:' + error as string);
         }
     };
 
     return (
-        <div>
+        <div className="relative h-full p-3">
             <div className="text-2xl">Search for articles</div>
-            <div className="p-3">
-                <div className="p-3 flex flex-col mr-2">
+            <div className="h-95percents">
+                <div className="p-3 flex flex-col mr-2 h-full">
                     <div>
                         <div className="mt-10">
                             <SearchBarComponent
@@ -119,13 +120,18 @@ const SearchPage = () => {
                             />
                         </div>
                     </div>
-                    <h2 className="text-xl mt-14 text-gray-400">History</h2>
-                    <div className="">
-                        <div className="flex gap-14 items-start">
+                    <h2 className="text-xl mt-14 mb-5 text-gray-400">History</h2>
+                    <div className="h-full">
+                        <div className="flex gap-14 h-full items-start">
                             <div className="flex flex-grow">
-                                <ArticleInfoComponent
-                                    handleDelete={handleDelete}
-                                    shoes={shoes}/>
+                                {shoes.length > 0 ? (
+                                    <ArticleInfoComponent
+                                        handleDelete={handleDelete}
+                                        shoes={shoes}
+                                    />
+                                ) : (
+                                    <DefaultViewComponent/>
+                                )}
                             </div>
                             <div className="mt-5 flex self-stretch">
                                 <FilterSectionComponent/>

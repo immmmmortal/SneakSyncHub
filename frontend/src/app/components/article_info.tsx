@@ -4,6 +4,7 @@ import {useOverflowDetector} from "react-detectable-overflow";
 import {Tooltip} from 'react-tooltip';
 import DeleteProductButtonComponent from "@/app/components/delete_product";
 import {toast} from "react-toastify";
+import React from "react";
 
 
 interface ArticleInfoComponentProps {
@@ -35,8 +36,10 @@ const ArticleInfoComponent = ({
         );
     }
 
+
     return (
         <ul className="flex-grow">
+            <Tooltip id="delete-shoe-tooltip" className="z-10"/>
             {overflow && <Tooltip className="z-20" id="shoe-name"/>}
             {shoes.map(shoe => (
                 <li key={shoe.id}
@@ -59,7 +62,8 @@ const ArticleInfoComponent = ({
                                 {shoe.name}
                             </div>
                             <DeleteProductButtonComponent
-                                handleDelete={handleDelete} id={shoe.id}/>
+                                handleDelete={handleDelete}
+                                id={shoe.id}/>
                         </div>
                         <div className="text-md text-green-400">
                             {shoe.price}$

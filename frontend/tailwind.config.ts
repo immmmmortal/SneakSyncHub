@@ -16,6 +16,9 @@ const config: Config = {
             flex: {
                 '1-3': '1 3'
             },
+            height: {
+                '95percents': '95%'
+            },
             colors: {
                 'sneakers-second': '#111313',
                 'sneakers-first': '#191b1c',
