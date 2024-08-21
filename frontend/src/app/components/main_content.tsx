@@ -21,7 +21,7 @@ const MainContentComponent: React.FC<{
     const [isTransitioning, setIsTransitioning] = useState(false);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
-    const openButtonRef = useRef<HTMLImageElement>(null);
+    const openButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -43,7 +43,7 @@ const MainContentComponent: React.FC<{
                 style={{width: '16rem'}} // Fixed width for the sidebar
             >
 
-                <ul className="[&_li]:p-3 mt-24 flex-grow flex flex-col gap-2 p-2 text-white">
+                <ul className="[&_li]:p-4 mt-24 flex-grow flex flex-col gap-2 p-2 text-white">
                     <li className="hover:bg-sneakers-second hover:rounded-2xl">
                         <FontAwesomeIcon icon={faHouse} className="mr-2"/>
                         SneakSyncHub
@@ -65,11 +65,22 @@ const MainContentComponent: React.FC<{
                         About
                     </li>
                 </ul>
-                <footer className="p-3 text-white">
-                    <div className="hover:bg-sneakers-second rounded-xl p-3">
-                        <FontAwesomeIcon icon={faWandMagicSparkles}
-                                         className="mr-2"/>
-                        Upgrade Plan
+                <footer
+                    className="p-4 ml-2 mr-2 mb-2 hover:bg-sneakers-second rounded-xl text-white">
+                    <div className="flex flex-row">
+                        <FontAwesomeIcon
+                            icon={faWandMagicSparkles}
+                            className="mr-2 self-center"/>
+                        <div
+                            className="flex flex-col items-start">
+                            <div
+                                className="flex items-start">
+                                Upgrade Plan
+                            </div>
+                            <div className="flex text-sm text-gray-500">
+                                Get unique features
+                            </div>
+                        </div>
                     </div>
                 </footer>
             </div>
@@ -83,6 +94,7 @@ const MainContentComponent: React.FC<{
             >
                 {/* Button for opening sidebar */}
                 <button
+                    ref={openButtonRef}
                     className={`fixed top-3.5 left-3 p-2 text-white rounded z-50 transition-transform duration-300 ease-in-out`}
                     onClick={() => setIsOpen(true)}
                 >
@@ -91,6 +103,7 @@ const MainContentComponent: React.FC<{
 
                 {/* Button for closing sidebar */}
                 <button
+                    ref={openButtonRef}
                     className={`fixed top-3.5 left-3 p-2 text-white rounded z-50 transition-transform duration-300 ease-in-out ${
                         isOpen ? '' : 'hidden'
                     }`}
@@ -106,7 +119,7 @@ const MainContentComponent: React.FC<{
             </div>
 
             {/* Manage User Component */}
-            <div>
+            <div className="fixed top-3.5 right-6">
                 <ManageUserComponent sidebarRef={sidebarRef}
                                      openButtonRef={openButtonRef}/>
             </div>

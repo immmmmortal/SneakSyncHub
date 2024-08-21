@@ -48,7 +48,7 @@ const ArticleInfoComponent = ({
                         <img
                             src={shoe.image}
                             alt={shoe.name}
-                            className="min-h-44 min-w-44 max-h-56 max-w-56 flex"
+                            className="min-h-44 min-w-44 max-h-56 w-48 max-w-56 flex"
                         />
                     </Link>
                     <div

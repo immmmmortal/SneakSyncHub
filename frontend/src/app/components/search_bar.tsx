@@ -1,19 +1,23 @@
 import React, {useRef, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
+import {Tooltip} from 'react-tooltip';
+
 
 interface SearchBarProps {
     width: string;
-    article_loading: boolean;
+    is_article_loading: boolean;
     placeholder: string;
-    onSearch: (searchQuery: string) => void; // Add onSearch prop
+    onSearch: (searchQuery: string) => void;
+    is_disabled: boolean;
 }
 
 const SearchBarComponent = ({
-                                article_loading,
+                                is_article_loading,
                                 width,
                                 placeholder,
-                                onSearch
+                                onSearch,
+                                is_disabled
                             }: SearchBarProps) => {
     const [search, setSearch] = useState("");
     const [isFocused, setIsFocused] = useState(false);
@@ -55,10 +59,15 @@ const SearchBarComponent = ({
 
     return (
         <div className="flex flex-col items-start">
-            <div className="flex flex-row items-center justify-stretch mb-2">
+            {is_disabled && <Tooltip id="disabled-searchbar-tooltip"
+                                     content="Login to start searching!"/>}
+            <div
+                data-tooltip-id="disabled-searchbar-tooltip"
+                className={`flex flex-row items-center justify-stretch mb-2`}>
                 <input
+                    disabled={is_disabled}
                     ref={inputRef}
-                    className={`placeholder:text-gray-400 bg-sneakers-second p-2 focus:outline-none text-white h-12 w-[${width}px]`}
+                    className={`placeholder:text-gray-400 bg-sneakers-second disabled:opacity-75 p-2 focus:outline-none text-white h-12 w-[${width}px]`}
                     placeholder={placeholder}
                     style={{
                         borderBottom: isFocused ? `2px solid #fff` : '1px solid #fff',
@@ -68,17 +77,17 @@ const SearchBarComponent = ({
                     onChange={(e) => setSearch(e.target.value)}
                     onFocus={() => {
                         setIsFocused(true);
-                        selectAllText(); // Select all text when the input gains focus
+                        selectAllText();
                     }}
                     onBlur={() => setIsFocused(false)}
-                    onKeyDown={handleKeyDown} // Handle Enter key press
+                    onKeyDown={handleKeyDown}
                 />
                 <div
-                    className="self-stretch p-2 content-center bg-sneakers-second cursor-pointer"
+                    className={`self-stretch p-2 ${is_disabled ? undefined : 'cursor-pointer'} content-center bg-sneakers-second`
+                    }
                     style={{borderBottom: isFocused ? '2px solid #fff' : '1px solid #fff'}}
-                    onClick={handleSearch} // Handle click on the icon
-                >
-                    {loading || article_loading ? (
+                    onClick={is_disabled ? undefined : handleSearch}>
+                    {loading || is_article_loading ? (
                         <div
                             className="w-4 h-4 border-4 border-t-4 border-t-white border-transparent rounded-full animate-spin"></div>
                     ) : (

@@ -24,7 +24,7 @@ const LogoutButtonComponent = () => {
         }
 
         setAuthenticated(false)
-        router.push("/")
+        location.reload()
         toast.success(data.message);
     }
 

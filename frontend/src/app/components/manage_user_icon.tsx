@@ -15,7 +15,7 @@ const ManageUserComponent: React.FC<ClickOutsideRefInterface> = ({
     const {isAuthenticated} = useAuth();
 
     return (
-        <nav className="absolute right-5 mt-4">
+        <nav>
             <ul>
                 <li>
                     {isAuthenticated ? (

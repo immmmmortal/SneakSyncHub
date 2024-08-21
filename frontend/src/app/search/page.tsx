@@ -7,11 +7,15 @@ import SearchBarComponent from "@/app/components/search_bar";
 import FilterSectionComponent from "@/app/components/filter_section";
 import {toast} from "react-toastify";
 import DefaultViewComponent from "@/app/components/default_view";
+import ArticleInfoLoadingComponent
+    from "@/app/components/article_info_loading";
+import {useAuth} from "@/app/lib/auth";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const {isAuthenticated} = useAuth();
 
     useEffect(() => {
         const fetchShoes = async () => {
@@ -107,30 +111,46 @@ const SearchPage = () => {
 
     return (
         <div className="relative h-full p-3">
-            <div className="text-2xl">Search for articles</div>
+            <div className="text-2xl">Search for
+                articles
+            </div>
             <div className="h-95percents">
                 <div className="p-3 flex flex-col mr-2 h-full">
                     <div>
-                        <div className="mt-10">
+                        <div
+                            className={`mt-10`}>
                             <SearchBarComponent
-                                article_loading={loading}
+                                is_article_loading={loading}
                                 width={''}
                                 placeholder={'Search article*'}
-                                onSearch={handleSearch} // Pass the search handler
+                                onSearch={handleSearch}
+                                is_disabled={!isAuthenticated}// Pass the search handler
                             />
                         </div>
                     </div>
                     <h2 className="text-xl mt-14 mb-5 text-gray-400">History</h2>
                     <div className="h-full">
                         <div className="flex gap-14 h-full items-start">
-                            <div className="flex flex-grow">
-                                {shoes.length > 0 ? (
-                                    <ArticleInfoComponent
-                                        handleDelete={handleDelete}
-                                        shoes={shoes}
-                                    />
+                            <div className="flex flex-grow flex-row">
+                                {loading ? (
+                                    <>
+                                        <div>
+                                            <ArticleInfoLoadingComponent/>
+                                            <ArticleInfoComponent
+                                                handleDelete={handleDelete}
+                                                shoes={shoes}
+                                            />
+                                        </div>
+                                    </>
                                 ) : (
-                                    <DefaultViewComponent/>
+                                    shoes.length > 0 ? (
+                                        <ArticleInfoComponent
+                                            handleDelete={handleDelete}
+                                            shoes={shoes}
+                                        />
+                                    ) : (
+                                        <DefaultViewComponent/>
+                                    )
                                 )}
                             </div>
                             <div className="mt-5 flex self-stretch">

@@ -21,12 +21,13 @@ const LoginComponent = ({closeModal}: { closeModal: () => void }) => {
     const router = useRouter()
     const {setAuthenticated} = useAuth()
 
+
     useEffect(() => {
         if (state.status === 200) {
             toast.info(state.message);
-            router.push('/')
             setAuthenticated(true)
             closeModal();
+            location.reload()
         } else if (state.status !== 0) {
             toast.info(state.message);
         }

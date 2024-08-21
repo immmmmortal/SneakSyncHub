@@ -16,7 +16,7 @@ export interface responseFormat {
 
 export interface ClickOutsideRefInterface {
     sidebarRef: React.RefObject<HTMLDivElement>
-    openButtonRef: React.RefObject<HTMLDivElement>
+    openButtonRef: React.RefObject<HTMLButtonElement>
 }
 
 export interface Shoe {

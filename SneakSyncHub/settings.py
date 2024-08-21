@@ -174,3 +174,10 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_HTTP_ONLY': True,
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
 }
+
+ELASTICSEARCH_DSL = {
+    "default": {
+        "hosts": "https://localhost:9200",
+        "http_auth": ("elastic", env('ELASTIC_SEARCH_USER_PASSWORD')),
+    }
+}

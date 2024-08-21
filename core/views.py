@@ -11,7 +11,7 @@ from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe
 from core.scraping.scrape import NikeScraper
 from core.utils import get_user_profile
-from members.models import CustomUser, UserProfile
+from members.models import UserProfile
 from restapi.serializers import ShoeSerializer
 
 
