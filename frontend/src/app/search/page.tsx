@@ -1,7 +1,6 @@
 'use client'
 
 import React, {useEffect, useState} from 'react';
-import {toast} from 'react-toastify';
 import {useAuth} from "@/app/lib/auth";
 import {Shoe} from "@/app/interfaces/interfaces";
 import ArticleInfoComponent from "@/app/components/article_info";
@@ -10,11 +9,7 @@ import FilterSectionComponent from "@/app/components/filter_section";
 import DefaultViewComponent from "@/app/components/default_view";
 import ArticleInfoLoadingComponent
     from "@/app/components/article_info_loading";
-import {
-    clearToastMessages,
-    getToastMessages,
-    saveToastMessages
-} from "@/app/lib/toast_utils";
+import {toast} from "react-toastify";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
@@ -24,11 +19,6 @@ const SearchPage = () => {
     const [error, setError] = useState<string | null>(null);
     const {isAuthenticated} = useAuth();
 
-    useEffect(() => {
-        const savedMessages = getToastMessages();
-        savedMessages.forEach(message => toast(message));
-        clearToastMessages();
-    }, []);
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -45,7 +35,7 @@ const SearchPage = () => {
 
                 if (!response.ok) {
                     setError(`HTTP error! Status: ${response.status}`);
-                    saveToastMessages([`HTTP error! Status: ${response.status}`]);
+                    toast.error(error)
                     return;
                 }
 
@@ -61,11 +51,10 @@ const SearchPage = () => {
                     setInitialMaxPrice(Math.max(...prices));
                 } else {
                     setError('Unexpected response format');
-                    saveToastMessages(['Unexpected response format']);
+                    toast.error(error)
                 }
             } catch (error) {
-                setError('Failed to fetch shoes');
-                saveToastMessages(['Failed to fetch shoes']);
+                toast.error('Failed to fetch shoes')
             } finally {
                 setLoading(false);
             }
@@ -90,7 +79,7 @@ const SearchPage = () => {
 
             if (!response.ok) {
                 setError(`HTTP error! Status: ${response.status}`);
-                saveToastMessages([`Error: ${(await response.text())}`]);
+                toast.error(error)
                 return;
             }
 
@@ -111,7 +100,8 @@ const SearchPage = () => {
         } catch (error) {
             console.error('Error:', error);
             setError('An error occurred while fetching the data. Please try again.');
-            saveToastMessages(['An error occurred while fetching the data. Please try again.']);
+            toast.error('An error occurred while fetching the data. Please try again.')
+
         } finally {
             setLoading(false);
         }
@@ -131,11 +121,12 @@ const SearchPage = () => {
             } else {
                 const errorData = await response.json();
                 setError(`HTTP error! Status: ${response.status}. ${errorData.details}`);
-                saveToastMessages([`HTTP error! Status: ${response.status}. ${errorData.details}`]);
+                toast.error(error)
+
             }
         } catch (error) {
             setError('An error occurred while deleting the shoe. Please try again.');
-            saveToastMessages(['An error occurred while deleting the shoe. Please try again.']);
+            toast.error('An error occurred while deleting the shoe. Please try again.')
         }
     };
 
