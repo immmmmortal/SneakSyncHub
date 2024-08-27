@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, {ReactNode} from 'react';
 import "react-toastify/dist/ReactToastify.css";
 import {useAuth} from "@/app/lib/auth";
 import Popup from "reactjs-popup";
@@ -13,7 +13,7 @@ const ManageUserComponent: React.FC<ClickOutsideRefInterface> = ({
                                                                      openButtonRef
                                                                  }) => {
     const {isAuthenticated} = useAuth();
-
+    
     return (
         <nav>
             <ul>
@@ -30,9 +30,13 @@ const ManageUserComponent: React.FC<ClickOutsideRefInterface> = ({
                                                     ">
                                 Login
                             </button>} modal>
-                                {(close: () => void) => (
-                                    <LoginComponent closeModal={close}/>
-                                )}
+                                {
+                                    // @ts-ignore
+                                    (
+                                        close: () => void) => (
+                                        <LoginComponent closeModal={close}/>
+                                    )
+                                }
                             </Popup>
                         </>
                     )}

@@ -1,6 +1,8 @@
 import React from "react";
 
-const DefaultViewComponent = () => {
+const DefaultViewComponent = ({title}: {
+    title: string
+}) => {
     const numberOfItems = 3;
 
     return (
@@ -40,7 +42,8 @@ const DefaultViewComponent = () => {
                 </ul>
                 <div
                     className="absolute inset-0 flex justify-center items-center z-10">
-                    <span className="text-3xl font-bold text-white">Start searching to fill history.</span>
+                    <span
+                        className="text-3xl font-bold text-white">{title}.</span>
                 </div>
             </div>
         </>

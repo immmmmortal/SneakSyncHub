@@ -2,6 +2,8 @@ from decimal import Decimal
 
 import lorem
 from django.shortcuts import render  # type: ignore
+from elasticsearch_dsl import Q
+from rest_framework import generics
 from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +15,47 @@ from core.scraping.scrape import NikeScraper
 from core.utils import get_user_profile
 from members.models import UserProfile
 from restapi.serializers import ShoeSerializer
+from .documents import ShoeDocument
+
+
+class ShoeSearchView(generics.ListAPIView):
+    serializer_class = ShoeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        query = self.kwargs.get('query')
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+
+        # Initialize the base Elasticsearch query
+        elasticsearch_query = Q(
+            "multi_match",
+            query=query,
+            fields=['name', 'article', 'sizes', 'parsed_from']
+        )
+
+        # Apply the price range filter if specified
+        if min_price or max_price:
+            price_filter = {}
+            if min_price:
+                price_filter['gte'] = float(min_price)
+            if max_price:
+                price_filter['lte'] = float(max_price)
+            elasticsearch_query &= Q('range', price=price_filter)
+
+        # Get the authenticated user
+        user = self.request.user
+        user_profile = UserProfile.objects.get(user=user)
+        parsed_shoes_ids = [str(shoe.id) for shoe in
+                            user_profile.scraped_articles.all()]
+
+        # Initialize Elasticsearch search
+        search = ShoeDocument.search().query(elasticsearch_query)
+
+        if parsed_shoes_ids:
+            search = search.query('ids', values=parsed_shoes_ids)
+
+        return search.to_queryset()
 
 
 class HomeView(APIView):

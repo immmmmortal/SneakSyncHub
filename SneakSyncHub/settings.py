@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_elasticsearch_dsl",
     "members",
     "core",
     "restapi",
@@ -179,5 +180,6 @@ ELASTICSEARCH_DSL = {
     "default": {
         "hosts": "https://localhost:9200",
         "http_auth": ("elastic", env('ELASTIC_SEARCH_USER_PASSWORD')),
+        'ca_certs': 'certificates/http_ca.crt',
     }
 }

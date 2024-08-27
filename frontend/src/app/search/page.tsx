@@ -13,6 +13,8 @@ import {useAuth} from "@/app/lib/auth";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
+    const [initialMinPrice, setInitialMinPrice] = useState<number>(0);
+    const [initialMaxPrice, setInitialMaxPrice] = useState<number>(200);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const {isAuthenticated} = useAuth();
@@ -27,6 +29,7 @@ const SearchPage = () => {
 
                 if (!response.ok) {
                     setError(`HTTP error! Status: ${response.status}`);
+                    toast.error(error || 'Failed to fetch shoes');
                     return;
                 }
 
@@ -35,11 +38,16 @@ const SearchPage = () => {
 
                 if (Array.isArray(article_data)) {
                     setShoes(article_data);
+
+                    // Calculate and set initial min and max prices
+                    const prices = article_data.map(shoe => parseFloat(shoe.price));
+                    setInitialMinPrice(Math.min(...prices));
+                    setInitialMaxPrice(Math.max(...prices));
                 } else {
                     setError('Unexpected response format');
                 }
             } catch (error) {
-                setError(`Failed to fetch shoes`);
+                setError('Failed to fetch shoes');
                 toast.error(error as string);
             } finally {
                 setLoading(false);
@@ -65,24 +73,28 @@ const SearchPage = () => {
 
             if (!response.ok) {
                 setError(`HTTP error! Status: ${response.status}`);
-                toast.error(error as string);
+                toast.error('Error: ' + (await response.text()));
                 return;
             }
 
-            const article_data = await response.json();
+            const result = await response.json();
+            const newArticles = Array.isArray(result) ? result : [result];
 
-            if (Array.isArray(article_data)) {
-                setShoes(prevShoes => [...article_data, ...prevShoes]); // Prepend the new data
-            } else if (article_data) {
-                setShoes(prevShoes => [article_data, ...prevShoes]); // Prepend the single new item
-            } else {
-                setError('Unexpected response format');
-                toast.error(error as string);
-            }
+            setShoes(prevShoes => {
+                const newShoes = [...prevShoes];
+                const newArticleSet = new Set(newArticles.map(article => article.id));
+
+                // Remove existing articles from the list
+                const filteredShoes = newShoes.filter(shoe => !newArticleSet.has(shoe.id));
+
+                // Add new articles to the top
+                return [...newArticles, ...filteredShoes];
+            });
+
         } catch (error) {
             console.error('Error:', error);
             setError('An error occurred while fetching the data. Please try again.');
-            toast.error(error as string);
+            toast.error('Error: ' + (error as string));
         } finally {
             setLoading(false);
         }
@@ -109,22 +121,24 @@ const SearchPage = () => {
         }
     };
 
+    // Handler function to be passed to FilterSectionComponent
+    const handleDataFetched = (data: any) => {
+        setShoes(data);
+    };
+
     return (
         <div className="relative h-full p-3">
-            <div className="text-2xl">Search for
-                articles
-            </div>
+            <div className="text-2xl">Search for articles</div>
             <div className="h-95percents">
                 <div className="p-3 flex flex-col mr-2 h-full">
                     <div>
-                        <div
-                            className={`mt-10`}>
+                        <div className={`mt-10`}>
                             <SearchBarComponent
                                 is_article_loading={loading}
                                 width={''}
                                 placeholder={'Search article*'}
                                 onSearch={handleSearch}
-                                is_disabled={!isAuthenticated}// Pass the search handler
+                                is_disabled={!isAuthenticated} // Pass the search handler
                             />
                         </div>
                     </div>
@@ -134,7 +148,7 @@ const SearchPage = () => {
                             <div className="flex flex-grow flex-row">
                                 {loading ? (
                                     <>
-                                        <div>
+                                        <div className="flex-auto">
                                             <ArticleInfoLoadingComponent/>
                                             <ArticleInfoComponent
                                                 handleDelete={handleDelete}
@@ -149,12 +163,25 @@ const SearchPage = () => {
                                             shoes={shoes}
                                         />
                                     ) : (
-                                        <DefaultViewComponent/>
+                                        <DefaultViewComponent
+                                            title="Start searching to fill history"/>
                                     )
                                 )}
                             </div>
                             <div className="mt-5 flex self-stretch">
-                                <FilterSectionComponent/>
+                                {isAuthenticated ? (
+                                    <FilterSectionComponent
+                                        minPrice={initialMinPrice}
+                                        maxPrice={initialMaxPrice}
+                                        onDataFetched={handleDataFetched} // Pass the handler
+                                    />
+                                ) : (
+                                    <FilterSectionComponent
+                                        minPrice={0}
+                                        maxPrice={200}
+                                        onDataFetched={handleDataFetched} // Pass the handler
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>

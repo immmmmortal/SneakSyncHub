@@ -1,11 +1,11 @@
+import React from "react";
 import {Shoe} from "@/app/interfaces/interfaces";
 import Link from "next/link";
 import {useOverflowDetector} from "react-detectable-overflow";
 import {Tooltip} from 'react-tooltip';
 import DeleteProductButtonComponent from "@/app/components/delete_product";
 import {toast} from "react-toastify";
-import React from "react";
-
+import {useTransition, animated} from '@react-spring/web';
 
 interface ArticleInfoComponentProps {
     shoes: Shoe[];
@@ -28,22 +28,23 @@ const ArticleInfoComponent = ({
         }
     };
 
-    if (!Array.isArray(shoes) || shoes.length === 0) {
-        return (
-            <ul className="flex">
-                <li className={`bg-sneakers-first h-56 min-h-fit rounded-2xl items-start flex flex-row mt-5 text-ellipsis overflow-hidden relative`}/>
-            </ul>
-        );
-    }
-
+    const transitions = useTransition(shoes, {
+        from: {opacity: 0, transform: 'scale(0.95)'},
+        enter: {opacity: 1, transform: 'scale(1)'},
+        leave: {opacity: 0, transform: 'scale(0.95)'},
+        keys: (shoe) => shoe.id,
+    });
 
     return (
         <ul className="flex-grow">
             <Tooltip id="delete-shoe-tooltip" className="z-10"/>
             {overflow && <Tooltip className="z-20" id="shoe-name"/>}
-            {shoes.map(shoe => (
-                <li key={shoe.id}
-                    className={`bg-sneakers-first h-56 min-h-fit rounded-2xl items-start flex flex-row mt-5 text-ellipsis overflow-hidden relative`}>
+            {transitions((style, shoe) => (
+                <animated.li
+                    key={shoe.id}
+                    style={style}
+                    className={`item bg-sneakers-first h-56 min-h-fit rounded-2xl items-start flex flex-row mt-5 text-ellipsis overflow-hidden relative`}
+                >
                     <Link href={shoe.url} className="min-w-44 min-h-44">
                         <img
                             src={shoe.image}
@@ -55,23 +56,25 @@ const ArticleInfoComponent = ({
                         className="flex flex-col h-auto p-3 min-h-[228px] flex-grow ml-4">
                         <div className="flex flex-row">
                             <div
+                                // @ts-ignore
                                 ref={ref}
                                 data-tooltip-id="shoe-name"
                                 data-tooltip-content={shoe.name}
-                                className={`text-lg hover:text-orange-500 transition-all w-fit overflow-hidden text-ellipsis h-8 duration-200 flex flex-grow font-semibold`}>
+                                className={`text-lg hover:text-orange-500 transition-all w-fit overflow-hidden text-ellipsis h-8 duration-200 flex flex-grow font-semibold`}
+                            >
                                 {shoe.name}
                             </div>
                             <DeleteProductButtonComponent
-                                handleDelete={handleDelete}
-                                id={shoe.id}/>
+                                handleDelete={() => handleDelete(shoe.id)}
+                                id={shoe.id}
+                            />
                         </div>
                         <div className="text-md text-green-400">
                             {shoe.price}$
                         </div>
                         <div className="mt-4 max-w-56">
                             <span className="ml-2">
-                                {shoe.article} -
-                                Available sizes
+                                {shoe.article} - Available sizes
                             </span>
                             <div
                                 className="mt-2 text-lg bg-sneakers-second p-2 rounded-2xl text-gray-500 flex flex-row flex-wrap flex-1 gap-1 max-h-[96px] max-w-fit overflow-clip"
@@ -79,14 +82,15 @@ const ArticleInfoComponent = ({
                                 {parseSizes(shoe.sizes).map((size) => (
                                     <span
                                         key={uuidv4()}
-                                        className={`border border-gray-300 rounded-md text-gray-400 h-6 p-1 text-xs bg-sneakers-first`}>
+                                        className={`border border-gray-300 rounded-md text-gray-400 h-6 p-1 text-xs bg-sneakers-first`}
+                                    >
                                         {size}
                                     </span>
                                 ))}
                             </div>
                         </div>
                     </div>
-                </li>
+                </animated.li>
             ))}
         </ul>
     );

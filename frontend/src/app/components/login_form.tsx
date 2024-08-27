@@ -9,25 +9,25 @@ import Image from "next/image";
 import googleicon from '../static/images/google_icon.png'
 import githubicon from '../static/images/github_icon.png'
 import {toast} from "react-toastify";
-import {useRouter} from "next/navigation";
 
 const initialState: responseFormat = {
     status: 0,
     message: '',
 }
 
-const LoginComponent = ({closeModal}: { closeModal: () => void }) => {
+const LoginComponent = ({closeModal}: {
+    closeModal: () => void
+}) => {
     const [state, formAction, isPending] = useActionState(authenticate, initialState);
-    const router = useRouter()
     const {setAuthenticated} = useAuth()
 
 
     useEffect(() => {
         if (state.status === 200) {
+            location.reload()
             toast.info(state.message);
             setAuthenticated(true)
             closeModal();
-            location.reload()
         } else if (state.status !== 0) {
             toast.info(state.message);
         }

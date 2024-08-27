@@ -16,4 +16,7 @@ urlpatterns = [
          name='shoe-delete'),
     path('api/shoes/<int:id>/', views.ShoeDetailedAPIView.as_view(),
          name='shoe-detail'),
+    path('shoes/search/<str:query>/', views.ShoeSearchView.as_view(),
+         name='shoe-search'),
+
 ]
