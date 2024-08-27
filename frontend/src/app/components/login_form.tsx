@@ -24,7 +24,6 @@ const LoginComponent = ({closeModal}: {
 
     useEffect(() => {
         if (state.status === 200) {
-            location.reload()
             toast.info(state.message);
             setAuthenticated(true)
             closeModal();

@@ -34,7 +34,7 @@ const DeleteProductButtonComponent = ({
             key={id}
             onClick={handleClick}
             data-tooltip-id="shoe-name"
-            data-tooltip-content="Delete current article"
+            data-tooltip-content="Delete this shoe?"
             className="bg-sneakers-second w-7 h-7 hover:bg-red-500 rounded top-2 left-2 flex items-center justify-center"
         >
             {deleteLoadingState ? (
@@ -44,7 +44,7 @@ const DeleteProductButtonComponent = ({
             ) : (
                 <FontAwesomeIcon icon={faTrashCan}
                                  data-tooltip-id="delete-shoe-tooltip"
-                                 data-tooltip-content="Delete current shoe"/>
+                />
             )}
         </button>
     );

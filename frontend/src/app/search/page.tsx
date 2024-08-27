@@ -1,15 +1,20 @@
 'use client'
 
 import React, {useEffect, useState} from 'react';
+import {toast} from 'react-toastify';
+import {useAuth} from "@/app/lib/auth";
 import {Shoe} from "@/app/interfaces/interfaces";
 import ArticleInfoComponent from "@/app/components/article_info";
 import SearchBarComponent from "@/app/components/search_bar";
 import FilterSectionComponent from "@/app/components/filter_section";
-import {toast} from "react-toastify";
 import DefaultViewComponent from "@/app/components/default_view";
 import ArticleInfoLoadingComponent
     from "@/app/components/article_info_loading";
-import {useAuth} from "@/app/lib/auth";
+import {
+    clearToastMessages,
+    getToastMessages,
+    saveToastMessages
+} from "@/app/lib/toast_utils";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
@@ -20,6 +25,17 @@ const SearchPage = () => {
     const {isAuthenticated} = useAuth();
 
     useEffect(() => {
+        const savedMessages = getToastMessages();
+        savedMessages.forEach(message => toast(message));
+        clearToastMessages();
+    }, []);
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setLoading(false);
+            return;
+        }
+
         const fetchShoes = async () => {
             try {
                 const response = await fetch('https://localhost:8000/api/fetch', {
@@ -29,7 +45,7 @@ const SearchPage = () => {
 
                 if (!response.ok) {
                     setError(`HTTP error! Status: ${response.status}`);
-                    toast.error(error || 'Failed to fetch shoes');
+                    saveToastMessages([`HTTP error! Status: ${response.status}`]);
                     return;
                 }
 
@@ -45,17 +61,18 @@ const SearchPage = () => {
                     setInitialMaxPrice(Math.max(...prices));
                 } else {
                     setError('Unexpected response format');
+                    saveToastMessages(['Unexpected response format']);
                 }
             } catch (error) {
                 setError('Failed to fetch shoes');
-                toast.error(error as string);
+                saveToastMessages(['Failed to fetch shoes']);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchShoes();
-    }, []);
+    }, [isAuthenticated]);
 
     const handleSearch = async (searchQuery: string) => {
         setLoading(true);
@@ -73,7 +90,7 @@ const SearchPage = () => {
 
             if (!response.ok) {
                 setError(`HTTP error! Status: ${response.status}`);
-                toast.error('Error: ' + (await response.text()));
+                saveToastMessages([`Error: ${(await response.text())}`]);
                 return;
             }
 
@@ -94,7 +111,7 @@ const SearchPage = () => {
         } catch (error) {
             console.error('Error:', error);
             setError('An error occurred while fetching the data. Please try again.');
-            toast.error('Error: ' + (error as string));
+            saveToastMessages(['An error occurred while fetching the data. Please try again.']);
         } finally {
             setLoading(false);
         }
@@ -114,10 +131,11 @@ const SearchPage = () => {
             } else {
                 const errorData = await response.json();
                 setError(`HTTP error! Status: ${response.status}. ${errorData.details}`);
+                saveToastMessages([`HTTP error! Status: ${response.status}. ${errorData.details}`]);
             }
         } catch (error) {
             setError('An error occurred while deleting the shoe. Please try again.');
-            toast.error('Error:' + error as string);
+            saveToastMessages(['An error occurred while deleting the shoe. Please try again.']);
         }
     };
 
@@ -146,27 +164,35 @@ const SearchPage = () => {
                     <div className="h-full">
                         <div className="flex gap-14 h-full items-start">
                             <div className="flex flex-grow flex-row">
-                                {loading ? (
-                                    <>
-                                        <div className="flex-auto">
-                                            <ArticleInfoLoadingComponent/>
-                                            <ArticleInfoComponent
-                                                handleDelete={handleDelete}
-                                                shoes={shoes}
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
-                                    shoes.length > 0 ? (
-                                        <ArticleInfoComponent
-                                            handleDelete={handleDelete}
-                                            shoes={shoes}
-                                        />
-                                    ) : (
+                                {isAuthenticated ? (
+                                        <>
+                                            {loading ? (
+                                                <>
+                                                    <div className="flex-auto">
+                                                        <ArticleInfoLoadingComponent/>
+                                                        <ArticleInfoComponent
+                                                            handleDelete={handleDelete}
+                                                            shoes={shoes}
+                                                        />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                shoes.length > 0 ? (
+                                                    <ArticleInfoComponent
+                                                        handleDelete={handleDelete}
+                                                        shoes={shoes}
+                                                    />
+                                                ) : (
+                                                    <DefaultViewComponent
+                                                        title="Start searching to fill history"/>
+                                                )
+                                            )}
+                                        </>) :
+                                    (
                                         <DefaultViewComponent
-                                            title="Start searching to fill history"/>
-                                    )
-                                )}
+                                            title="Authorize to view search page"/>
+                                    )}
+
                             </div>
                             <div className="mt-5 flex self-stretch">
                                 {isAuthenticated ? (

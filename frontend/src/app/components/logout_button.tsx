@@ -8,7 +8,6 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 const LogoutButtonComponent = () => {
     const {setAuthenticated} = useAuth()
-    const router = useRouter()
 
     const handleLogout = async () => {
         const res = await fetch("https://localhost:8000/api/logout", {
@@ -23,9 +22,8 @@ const LogoutButtonComponent = () => {
             return;
         }
 
-        setAuthenticated(false)
-        location.reload()
         toast.success(data.message);
+        setAuthenticated(false)
     }
 
     return (
