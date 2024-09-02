@@ -7,6 +7,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 
 class ArticleInfo(TypedDict):
@@ -22,15 +23,21 @@ class WebDriver:
         self.search_page_url: str = ""
 
     def _setup_driver(self) -> None:
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--headless=new")
-        self.driver = webdriver.Chrome(options=chrome_options)
+        firefox_options = Options()
+        firefox_options.add_argument(
+            "--headless")  # Headless mode for Firefox
+
+        self.driver = webdriver.Remote(
+            command_executor='http://selenium:4444/wd/hub',
+            options=firefox_options
+        )
+
         html = requests.get(self.search_page_url)
         self.products_list_page = BeautifulSoup(html.text, "html.parser")
 
     def parse_html_by_url(self, product_url) -> str:
         self.driver.get(product_url)
-        self.driver.implicitly_wait(1)
+        self.driver.implicitly_wait(10)
         product_html_source = self.driver.page_source
         self.driver.quit()
         return product_html_source

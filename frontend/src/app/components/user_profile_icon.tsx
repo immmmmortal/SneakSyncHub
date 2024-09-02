@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import defaultUserProfileIcon
     from '../static/images/default_profile_picture.jpg';
@@ -21,7 +21,7 @@ const UserProfileIcon: React.FC<ClickOutsideRefInterface> = ({
         setIsDropdownOpen(prev => !prev);
     };
 
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = useCallback((event: MouseEvent) => {
         if (
             dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
             (!sidebarRef.current || !sidebarRef.current.contains(event.target as Node)) &&
@@ -30,14 +30,14 @@ const UserProfileIcon: React.FC<ClickOutsideRefInterface> = ({
         ) {
             setIsDropdownOpen(false);
         }
-    };
+    }, [sidebarRef, openButtonRef]);
 
     useEffect(() => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []);
+    }, [handleClickOutside]);
 
     const handleProfileClick = (event: React.MouseEvent) => {
         // Stop click event propagation to prevent conflicts

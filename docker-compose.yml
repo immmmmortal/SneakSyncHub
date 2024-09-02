@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: django
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      ./.env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ELASTIC_SEARCH_PASSWORD=${ELASTIC_SEARCH_PASSWORD}
+    depends_on:
+      - db
+      - es
+      - selenium
+    networks:
+      - backend
+
+  db:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: sneaksynchub
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: es
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_SEARCH_PASSWORD}
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    networks:
+      - backend
+
+  selenium:
+    image: selenium/standalone-firefox:4.24.0-20240830
+    container_name: selenium
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    shm_size: "2g"
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  elasticsearch_data:
+
+networks:
+  backend:

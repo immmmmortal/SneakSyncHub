@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {useAuth} from "@/app/lib/auth";
 import {Shoe} from "@/app/interfaces/interfaces";
 import ArticleInfoComponent from "@/app/components/article_info";
@@ -18,7 +18,6 @@ const SearchPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const {isAuthenticated} = useAuth();
-
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -61,7 +60,7 @@ const SearchPage = () => {
         };
 
         fetchShoes();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, error]);
 
     const handleSearch = async (searchQuery: string) => {
         setLoading(true);
@@ -131,9 +130,9 @@ const SearchPage = () => {
     };
 
     // Handler function to be passed to FilterSectionComponent
-    const handleDataFetched = (data: any) => {
+    const handleDataFetched = useCallback((data: any) => {
         setShoes(data);
-    };
+    }, []);
 
     return (
         <div className="relative h-full p-3">

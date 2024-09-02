@@ -9,9 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@mui/material": "^6.0.0",
+    "@react-spring/web": "^9.7.4",
     "next": "^15.0.0-canary.95",
-    "react": "19.0.0-beta-4508873393-20240430",
-    "react-dom": "19.0.0-beta-4508873393-20240430"
+    "rc-slider": "^11.1.5",
+    "react": "^19.0.0-rc-3208e73e-20240730",
+    "react-detectable-overflow": "^0.8.0",
+    "react-dom": "^19.0.0-rc-3208e73e-20240730",
+    "react-toastify": "^10.0.5",
+    "react-tooltip": "^5.28.0",
+    "reactjs-popup": "^2.0.6",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",

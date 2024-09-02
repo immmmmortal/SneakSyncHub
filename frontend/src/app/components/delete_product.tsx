@@ -2,7 +2,6 @@ import React, {useState} from "react";
 import {faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {toast} from "react-toastify";
-import {Tooltip} from "react-tooltip";
 
 const DeleteProductButtonComponent = ({
                                           id,

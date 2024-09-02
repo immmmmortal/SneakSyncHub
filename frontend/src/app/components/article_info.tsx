@@ -5,6 +5,7 @@ import {useOverflowDetector} from "react-detectable-overflow";
 import {Tooltip} from 'react-tooltip';
 import DeleteProductButtonComponent from "@/app/components/delete_product";
 import {toast} from "react-toastify";
+import Image from "next/image";
 import {useTransition, animated} from '@react-spring/web';
 
 interface ArticleInfoComponentProps {
@@ -46,7 +47,9 @@ const ArticleInfoComponent = ({
                     className={`item bg-sneakers-first h-56 min-h-fit rounded-2xl items-start flex flex-row mt-5 text-ellipsis overflow-hidden relative`}
                 >
                     <Link href={shoe.url} className="min-w-44 min-h-44">
-                        <img
+                        <Image
+                            width="192"
+                            height="192"
                             src={shoe.image}
                             alt={shoe.name}
                             className="min-h-44 min-w-44 max-h-56 w-48 max-w-56 flex"

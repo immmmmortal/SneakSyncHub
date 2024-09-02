@@ -80,7 +80,7 @@ const FilterSectionComponent = ({
         }
     }, [progress]);
 
-    // Only make the GET request if the user has interacted with the slider/input
+
     useEffect(() => {
         if (hasInteracted) {
             const fetchShoes = async () => {
@@ -106,7 +106,7 @@ const FilterSectionComponent = ({
 
             fetchShoes();
         }
-    }, [value, hasInteracted]); // Depend on `hasInteracted` to ensure requests only happen after interaction
+    }, [value, hasInteracted]);
 
     return (
         <div

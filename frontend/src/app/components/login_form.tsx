@@ -30,7 +30,7 @@ const LoginComponent = ({closeModal}: {
         } else if (state.status !== 0) {
             toast.info(state.message);
         }
-    }, [state.status, state.message, closeModal]);
+    }, [state.status, state.message, closeModal, setAuthenticated]);
 
 
     return (
@@ -80,8 +80,8 @@ const LoginComponent = ({closeModal}: {
                 <div className="flex">
                     <div
                         className="flex items-center justify-center w-full mt-4">
-                        Don't have an account? <Link href=""
-                                                     className="text-cyan-600 ml-2">Sign
+                        Don&apos;t have an account? <Link href=""
+                                                          className="text-cyan-600 ml-2">Sign
                         Up</Link>
                     </div>
                 </div>
