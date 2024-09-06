@@ -7,7 +7,7 @@ import MainContentComponent from "@/app/components/main_content";
 import 'react-tooltip/dist/react-tooltip.css'
 
 export const metadata: Metadata = {
-    title: "SneakSyncHub",
+    title: "sneaksynchub",
     description: "Easily gather sneakers info",
 };
 

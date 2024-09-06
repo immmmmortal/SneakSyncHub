@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
-from SneakSyncHub import settings
+from sneaksynchub import settings
 from members.models import CustomUser
 
 

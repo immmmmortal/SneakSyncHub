@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
-  web:
-    build: .
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: django
     volumes:
       - .:/app
@@ -19,6 +19,32 @@ services:
       - selenium
     networks:
       - backend
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nextjs
+    ports:
+      - "3000:3000"
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certificates:/certificates
+      - ./frontend/certificates:/certificates/nextjs
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - backend
+
 
   db:
     image: postgres:15
@@ -44,12 +70,10 @@ services:
       - backend
 
   selenium:
-    image: selenium/standalone-firefox:4.24.0-20240830
+    image: selenium/standalone-firefox:latest
     container_name: selenium
     ports:
       - "4444:4444"
-      - "7900:7900"
-    shm_size: "2g"
     networks:
       - backend
 

@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from typing import TypedDict
 
-import re
-
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -29,7 +27,7 @@ class WebDriver:
 
         self.driver = webdriver.Remote(
             command_executor='http://selenium:4444/wd/hub',
-            options=firefox_options
+            options=firefox_options,
         )
 
         html = requests.get(self.search_page_url)
@@ -37,7 +35,7 @@ class WebDriver:
 
     def parse_html_by_url(self, product_url) -> str:
         self.driver.get(product_url)
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(3)
         product_html_source = self.driver.page_source
         self.driver.quit()
         return product_html_source

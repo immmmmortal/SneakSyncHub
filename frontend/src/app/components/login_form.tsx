@@ -52,6 +52,7 @@ const LoginComponent = ({closeModal}: {
                                 id="email"
                                 type="email"
                                 name="email"
+                                autoComplete="email"
                                 placeholder="Email address*"
                                 required
                             />
@@ -69,6 +70,7 @@ const LoginComponent = ({closeModal}: {
                                 id="password"
                                 type="password"
                                 name="password"
+                                autoComplete="current-password"
                                 placeholder="Password*"
                                 required
                                 minLength={6}
