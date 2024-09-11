@@ -12,7 +12,7 @@ urlpatterns = [
                        name="token_obtain_pair"),
                   path("api/refresh/", TokenRefreshView.as_view(),
                        name="token_refresh"),
-                  path("", include("core.urls")),
+                  path("api/", include("core.urls")),
               ] + static(settings.STATIC_URL,
                          document_root=settings.STATIC_ROOT)
 

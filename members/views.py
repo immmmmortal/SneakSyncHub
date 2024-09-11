@@ -4,7 +4,7 @@ from django.contrib.auth import login, logout, authenticate
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from sneaksynchub import settings
+from SneakSyncHub import settings
 from core.auth.auth_utils import get_access_token, set_httponly_cookie, \
     UserTokenService, set_authentication_cookie
 from restapi.serializers import UserSerializer

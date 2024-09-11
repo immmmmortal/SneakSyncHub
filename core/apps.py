@@ -8,6 +8,7 @@ class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
+        import members.signals
         # Pass the Elasticsearch connections to the RealTimeSignalProcessor
         signal_processor = RealTimeSignalProcessor(connections=connections)
         # Set up signal processor to automatically handle model changes

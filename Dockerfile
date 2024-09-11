@@ -26,5 +26,5 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # Command to run migrations, rebuild search index, and start Gunicorn
-CMD ["sh", "-c", "ls -la /app && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn sneaksynchub.wsgi:application --bind 0.0.0.0:8000 --certfile /certificates/django/localhost.crt --keyfile /certificates/django/localhost.key --chdir /app"]
+CMD ["sh", "-c", "ls -la /app && python manage.py migrate && python manage.py collectstatic --noinput && python manage.py search_index --rebuild -f && gunicorn SneakSyncHub.wsgi:application --bind 0.0.0.0:8000 --certfile /certificates/django/localhost.crt --keyfile /certificates/django/localhost.key --chdir /app"]
 

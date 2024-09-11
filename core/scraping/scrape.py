@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
+from SneakSyncHub.settings import env
+
 
 class ArticleInfo(TypedDict):
     url: str
@@ -26,7 +28,7 @@ class WebDriver:
             "--headless")  # Headless mode for Firefox
 
         self.driver = webdriver.Remote(
-            command_executor='http://selenium:4444/wd/hub',
+            command_executor=f'http://{env("SELENIUM_HOST")}:4444/wd/hub',
             options=firefox_options,
         )
 
@@ -35,7 +37,7 @@ class WebDriver:
 
     def parse_html_by_url(self, product_url) -> str:
         self.driver.get(product_url)
-        self.driver.implicitly_wait(3)
+        self.driver.implicitly_wait(1)
         product_html_source = self.driver.page_source
         self.driver.quit()
         return product_html_source

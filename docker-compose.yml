@@ -9,10 +9,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      ./.env
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - ELASTIC_SEARCH_PASSWORD=${ELASTIC_SEARCH_PASSWORD}
+      - .env.docker
     depends_on:
       - db
       - es
@@ -52,7 +49,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: sneaksynchub
+      POSTGRES_DB: SneakSyncHub
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -76,6 +73,52 @@ services:
       - "4444:4444"
     networks:
       - backend
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - backend
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    env_file:
+      - .env.docker
+    command: celery -A SneakSyncHub worker --loglevel=info
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_beat
+    command: celery -A SneakSyncHub beat -l info
+    env_file:
+      - .env.docker
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  flower:
+    image: mher/flower:latest
+    container_name: flower
+    ports:
+      - "5555:5555"
+    command: celery --broker=redis://redis:6379/0 flower
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+
+
 
 volumes:
   postgres_data:

@@ -74,9 +74,9 @@ class HomeView(APIView):
 
 
 class ShoeDetailedAPIView(APIView):
-    def get(self, request, id):
+    def get(self, request, shoe_id):
         try:
-            shoe = Shoe.objects.get(id=id)
+            shoe = Shoe.objects.get(id=shoe_id)
             serializer = ShoeSerializer(shoe)
             return Response(serializer.data)
         except Shoe.DoesNotExist:
@@ -85,13 +85,14 @@ class ShoeDetailedAPIView(APIView):
 
 
 class ParsedShoeDeleteAPIView(APIView):
-    def delete(self, request, id):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, shoe_id):
         try:
-            # Get the user profile from the request
             user_profile = get_user_profile(request)
 
             # Get the shoe instance associated with the user's profile
-            shoe = user_profile.scraped_articles.get(id=id)
+            shoe = user_profile.scraped_articles.get(id=shoe_id)
 
             # Remove the shoe from the user's scraped_articles
             user_profile.scraped_articles.remove(shoe)
@@ -120,6 +121,13 @@ class ShoesView(APIView):
         scraped_articles = Shoe.objects.all()
         serializer = ShoeSerializer(scraped_articles, many=True)
         return Response(serializer.data)
+
+
+class DeleteShoeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, shoe_id):
+        Shoe.objects.get(id=shoe_id).delete()
 
 
 class FetchPageView(APIView):
@@ -162,14 +170,19 @@ class FetchPageView(APIView):
                 sizes=article_info["sizes"],
                 parsed_from="Nike"
             )
+            new_article.count += 1
             new_article.save()
 
             user_profile.scraped_articles.add(new_article)
+            user_profile.scraped_articles_history.add(article)
 
             serializer = ShoeSerializer(new_article)
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
         else:
+            existing_article.count += 1
+            existing_article.save()
+
             # Article already exists, add it to the user's profile
             user_profile.scraped_articles.add(existing_article)
             serializer = ShoeSerializer(existing_article)
