@@ -113,7 +113,7 @@ const MainContentComponent: React.FC<{
                                      className="text-2xl"/>
                 </button>
 
-                <div className="ml-14 mt-1">
+                <div className="ml-14 h-full">
                     {children}
                 </div>
             </div>

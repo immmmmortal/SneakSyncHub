@@ -19,7 +19,7 @@ const ArticleInfoComponent = ({
                               }: ArticleInfoComponentProps) => {
     const {ref, overflow} = useOverflowDetector();
     const {v4: uuidv4} = require('uuid');
-
+    2
     const parseSizes = (sizes: string): string[] => {
         try {
             return JSON.parse(sizes.replace(/'/g, '"'));
@@ -75,17 +75,17 @@ const ArticleInfoComponent = ({
                         <div className="text-md text-green-400">
                             {shoe.price}$
                         </div>
-                        <div className="mt-4 max-w-56">
+                        <div className="mt-4 w-3/4">
                             <span className="ml-2">
                                 {shoe.article} - Available sizes
                             </span>
                             <div
-                                className="mt-2 text-lg bg-sneakers-second p-2 rounded-2xl text-gray-500 flex flex-row flex-wrap flex-1 gap-1 max-h-[96px] max-w-fit overflow-clip"
+                                className="mt-2 text-lg p-2 rounded-2xl text-gray-500 flex flex-row flex-wrap flex-1 gap-1 max-h-[96px] max-w-fit overflow-clip"
                             >
                                 {parseSizes(shoe.sizes).map((size) => (
                                     <span
                                         key={uuidv4()}
-                                        className={`border border-gray-300 rounded-md text-gray-400 h-6 p-1 text-xs bg-sneakers-first`}
+                                        className={`border border-gray-300 rounded-md w-8 text-gray-400 p-1 h-6 text-center text-xs bg-sneakers-first`}
                                     >
                                         {size}
                                     </span>

@@ -78,7 +78,7 @@ export const authenticate = async (
     };
 
     try {
-        const res = await fetch("https://localhost:8000/api/token", {
+        const res = await fetch("https://localhost:8000/api/login", {
             method: 'POST',
             credentials: 'include',
             headers: {

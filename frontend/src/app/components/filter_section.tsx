@@ -84,7 +84,7 @@ const FilterSectionComponent = ({
     useEffect(() => {
         if (hasInteracted) {
             const fetchShoes = async () => {
-                const url = `https://localhost:8000/shoes/search/shoes/?min_price=${value[0]}&max_price=${value[1]}`;
+                const url = `https://localhost:8000/api/search/shoes/?min_price=${value[0]}&max_price=${value[1]}`;
                 try {
                     const response = await fetch(url, {
                         method: 'GET',
@@ -110,7 +110,7 @@ const FilterSectionComponent = ({
 
     return (
         <div
-            className="bg-sneakers-first h-full rounded-2xl min-w-48 p-3 max-w-52">
+            className="bg-sneakers-first h-full rounded-2xl min-w-48 p-3 max-w-52 w-52">
             <div>
                 <input
                     placeholder="Filter by params"
