@@ -11,11 +11,12 @@ from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe
-from core.scraping.scrape import NikeScraper
+# from core.scraping.scrape import NikeScraper
 from core.utils import get_user_profile
 from members.models import UserProfile
 from restapi.serializers import ShoeSerializer
 from .documents import ShoeDocument
+from core.scraping.scraping_compose import NikeScraper
 
 
 class ShoeSearchView(generics.ListAPIView):
@@ -128,6 +129,7 @@ class DeleteShoeView(APIView):
 
     def delete(self, request, shoe_id):
         Shoe.objects.get(id=shoe_id).delete()
+        return Response(status=status.HTTP_200_OK)
 
 
 class FetchPageView(APIView):
@@ -155,19 +157,19 @@ class FetchPageView(APIView):
         if not existing_article:
             # Article does not exist, so scrape and add it
             scraper = NikeScraper(article)
-            article_info = scraper.scrape()
+            product_info = scraper.get_product_info()
 
             price_decimal = Decimal(
-                article_info["price"].replace("$", "").replace(",", "")
+                product_info["price"].replace("$", "").replace(",", "")
             )
 
             new_article = Shoe(
-                url=article_info["url"],
+                url=product_info["url"],
                 price=price_decimal,
-                image=article_info["product_image_url"],
-                name=article_info["colorway_name"],
+                image=product_info["image_url"],
+                name=product_info["name"],
                 article=article,
-                sizes=article_info["sizes"],
+                sizes=product_info["sizes"],
                 parsed_from="Nike"
             )
             new_article.count += 1

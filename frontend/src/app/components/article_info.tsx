@@ -19,7 +19,6 @@ const ArticleInfoComponent = ({
                               }: ArticleInfoComponentProps) => {
     const {ref, overflow} = useOverflowDetector();
     const {v4: uuidv4} = require('uuid');
-    2
     const parseSizes = (sizes: string): string[] => {
         try {
             return JSON.parse(sizes.replace(/'/g, '"'));

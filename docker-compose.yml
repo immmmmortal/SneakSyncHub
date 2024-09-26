@@ -42,7 +42,6 @@ services:
     networks:
       - backend
 
-
   db:
     image: postgres:15
     container_name: postgres
@@ -67,12 +66,17 @@ services:
       - backend
 
   selenium:
-    image: selenium/standalone-firefox:latest
     container_name: selenium
+    image: selenium/standalone-chrome:4.24.0-20240907
     ports:
       - "4444:4444"
     networks:
       - backend
+    environment:
+      - SE_VNC_NO_PASSWORD=true
+    privileged: true
+    shm_size: 2g
+
 
   redis:
     image: redis:latest

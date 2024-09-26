@@ -3,6 +3,7 @@ import 'rc-slider/assets/index.css';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 import {toast} from 'react-toastify';
+import {useAuth} from "@/app/lib/auth";
 
 function valuetext(value: number) {
     return `${value}°C`;
@@ -24,6 +25,7 @@ const FilterSectionComponent = ({
     const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
     const [progress, setProgress] = useState<number>(0);
     const [hasInteracted, setHasInteracted] = useState<boolean>(false); // Track user interaction
+    const {isAuthenticated} = useAuth();
 
     const handleChange = (event: Event, newValue: number | number[]) => {
         if (timer) {
@@ -125,6 +127,7 @@ const FilterSectionComponent = ({
                                 className="flex flex-row gap-1 items-center [&_input]:w-12 [&_input]:rounded">
                                 <span>From</span>
                                 <input
+                                    disabled={!isAuthenticated}
                                     className="flex"
                                     value={pendingValue[0]}
                                     onChange={(e) => handleInputChange(0, e)}
@@ -134,6 +137,7 @@ const FilterSectionComponent = ({
                                 className="flex flex-row gap-1 items-center [&_input]:w-12 [&_input]:rounded">
                                 <span>to</span>
                                 <input
+                                    disabled={!isAuthenticated}
                                     className="flex"
                                     value={pendingValue[1]}
                                     onChange={(e) => handleInputChange(1, e)}
@@ -142,6 +146,7 @@ const FilterSectionComponent = ({
                         </div>
                         <div className="pr-2 pl-2">
                             <Slider
+                                disabled={!isAuthenticated}
                                 className="mt-1"
                                 sx={{color: 'darkgrey'}}
                                 min={minPrice}
