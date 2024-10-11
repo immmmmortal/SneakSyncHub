@@ -1,0 +1,18 @@
+.suggestions-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+    background-color: #1c1c1c; /* Background color of the scrollbar track */
+}
+
+.suggestions-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #ff4500; /* Color of the draggable scrollbar handle */
+    border-radius: 10px; /* Rounded corners for the scrollbar */
+    border: 2px solid #333333; /* Optional: border around the thumb */
+}
+
+.suggestions-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #ff5722; /* Color when hovered */
+}
+
+.suggestions-scrollbar::-webkit-scrollbar-track {
+    background-color: #2e2e2e; /* Color of the scrollbar track */
+}
