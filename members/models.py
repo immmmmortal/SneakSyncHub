@@ -47,8 +47,9 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(
         upload_to="profile_pics/", default="default_profile_picture.jpg"
     )
-    scraped_articles_history = models.TextField(default="")
-    preferred_sites = models.TextField(default="")
+    scraped_articles_history = models.ManyToManyField(Shoe,
+                                                      related_name="scraped_articles_history",
+                                                      blank=True)
     scraped_articles = models.ManyToManyField(
         Shoe,
         related_name="scraped_articles"
@@ -58,10 +59,3 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.email
-
-    def add_to_history(self, article: str):
-        article_exists = self.scraped_articles.filter(
-            article=article).exists()
-
-        if not article_exists:
-            self.scraped_articles_history.__add__(article)

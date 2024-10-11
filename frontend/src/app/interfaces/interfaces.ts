@@ -20,6 +20,8 @@ export interface ClickOutsideRefInterface {
 }
 
 export interface Shoe {
+    price_history: PriceHistory[];
+    description: string;
     id: number;
     name: string;
     price: string;
@@ -27,4 +29,9 @@ export interface Shoe {
     image: string;
     article: string;
     sizes: string;
+}
+
+export interface PriceHistory {
+    price: number;
+    date_recorded: string;
 }

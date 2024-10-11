@@ -12,7 +12,9 @@ urlpatterns = [
     path('shoes/clear', views.ClearUserParsedArticles.as_view()),
     path('shoes/<int:shoe_id>/delete',
          views.ParsedShoeDeleteAPIView.as_view()),
-    path('shoes/<int:shoe_id>', views.ShoeDetailedAPIView.as_view()),
+    path('shoes/<str:shoe_article>', views.ShoeDetailedView.as_view()),
+    path('shoes/<int:shoe_id>/remove', views.DeleteShoeView.as_view()),
     path('search/<str:query>/', views.ShoeSearchView.as_view()),
-    path('shoes/<int:shoe_id>/remove', views.DeleteShoeView.as_view())
+    path('suggestions', views.SearchSuggestionView.as_view()),
+
 ]

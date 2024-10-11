@@ -111,3 +111,44 @@ export const authenticate = async (
 };
 
 
+export const signUp = async (
+    prevState: responseFormat,
+    formData: FormData
+): Promise<responseFormat> => {
+    let user_data: userCredentials = {
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+    };
+
+    try {
+        const res = await fetch("https://localhost:8000/api/signup", {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user_data),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            return {
+                status: data.status,
+                message: data.message,
+            }
+        }
+
+        return {
+            status: data.status,
+            message: data.message,
+        }
+
+    } catch (error) {
+        return {
+            status: 500,
+            message: 'Failed to signup due to network error'
+        };
+    }
+
+};

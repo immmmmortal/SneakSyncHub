@@ -1,14 +1,25 @@
 from rest_framework import serializers
 
 import core.models  # noqa: F401
-from core.models import Shoe
+from core.models import Shoe, ShoePriceHistory
 from members.models import CustomUser
 
 
+class ShoePriceHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoePriceHistory
+        fields = ['price', 'date_recorded']
+
+
 class ShoeSerializer(serializers.ModelSerializer):
+    price_history = ShoePriceHistorySerializer(many=True, read_only=True)
+
     class Meta:
         model = Shoe
-        fields = "__all__"
+        fields = ['id', 'name', 'price', 'url', 'image', 'article',
+                  'sizes',
+                  'parsed_from', 'created_at', 'count', 'description',
+                  'price_history']
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -4,8 +4,8 @@ from members import views
 
 urlpatterns = [
     path("profile",
-         views.UserProfileView.as_view(), name="user_profile"),
-    path("logout", views.LogoutView.as_view(), name="logout"),
-    path('signin', views.CreateUserView.as_view(), name='create'),
-    path('login', views.ObtainAccessToken.as_view(), name='token'),
+         views.UserProfileView.as_view()),
+    path("logout", views.LogoutView.as_view()),
+    path('signup', views.SignupUserView.as_view()),
+    path('login', views.LoginUserView.as_view()),
 ]

@@ -4,9 +4,9 @@ import Link from "next/link";
 import {useOverflowDetector} from "react-detectable-overflow";
 import {Tooltip} from 'react-tooltip';
 import DeleteProductButtonComponent from "@/app/components/delete_product";
-import {toast} from "react-toastify";
 import Image from "next/image";
-import {useTransition, animated} from '@react-spring/web';
+import {animated, useTransition} from '@react-spring/web';
+import {parseSizes} from "@/app/lib/utils";
 
 interface ArticleInfoComponentProps {
     shoes: Shoe[];
@@ -19,14 +19,7 @@ const ArticleInfoComponent = ({
                               }: ArticleInfoComponentProps) => {
     const {ref, overflow} = useOverflowDetector();
     const {v4: uuidv4} = require('uuid');
-    const parseSizes = (sizes: string): string[] => {
-        try {
-            return JSON.parse(sizes.replace(/'/g, '"'));
-        } catch (e) {
-            toast.error('Failed to parse sizes:' + e);
-            return [];
-        }
-    };
+
 
     const transitions = useTransition(shoes, {
         from: {opacity: 0, transform: 'scale(0.95)'},
@@ -43,7 +36,7 @@ const ArticleInfoComponent = ({
                 <animated.li
                     key={shoe.id}
                     style={style}
-                    className={`item bg-sneakers-first h-56 min-h-fit rounded-2xl items-start flex flex-row mt-5 text-ellipsis overflow-hidden relative`}
+                    className={`item bg-sneakers-first max-h-56 h-56 min-h-fit rounded-2xl items-start flex flex-row mt-5 text-ellipsis overflow-hidden relative`}
                 >
                     <Link href={shoe.url} className="min-w-44 min-h-44">
                         <Image
@@ -55,7 +48,7 @@ const ArticleInfoComponent = ({
                         />
                     </Link>
                     <div
-                        className="flex flex-col h-auto p-3 min-h-[228px] flex-grow ml-4">
+                        className="flex flex-col h-auto p-3 min-h-[224px] flex-grow ml-4">
                         <div className="flex flex-row">
                             <div
                                 // @ts-ignore
@@ -64,7 +57,9 @@ const ArticleInfoComponent = ({
                                 data-tooltip-content={shoe.name}
                                 className={`text-lg hover:text-orange-500 transition-all w-fit overflow-hidden text-ellipsis h-8 duration-200 flex flex-grow font-semibold`}
                             >
-                                {shoe.name}
+                                <Link href={`/shoes/${shoe.article}`}>
+                                    {shoe.name}
+                                </Link>
                             </div>
                             <DeleteProductButtonComponent
                                 handleDelete={() => handleDelete(shoe.id)}
@@ -79,7 +74,7 @@ const ArticleInfoComponent = ({
                                 {shoe.article} - Available sizes
                             </span>
                             <div
-                                className="mt-2 text-lg p-2 rounded-2xl text-gray-500 flex flex-row flex-wrap flex-1 gap-1 max-h-[96px] max-w-fit overflow-clip"
+                                className="mt-2 text-lg p-2 rounded-2xl text-gray-500 flex flex-row flex-wrap flex-1 gap-1 max-h-[61px] max-w-fit overflow-clip"
                             >
                                 {parseSizes(shoe.sizes).map((size) => (
                                     <span

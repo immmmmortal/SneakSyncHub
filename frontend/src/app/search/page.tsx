@@ -10,6 +10,8 @@ import DefaultViewComponent from "@/app/components/default_view";
 import ArticleInfoLoadingComponent
     from "@/app/components/article_info_loading";
 import {toast} from "react-toastify";
+import Link from "next/link";
+import ClearParsedArticles from "@/app/components/clear_parsed_articles";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
@@ -34,7 +36,7 @@ const SearchPage = () => {
 
                 if (!response.ok) {
                     setError(`HTTP error! Status: ${response.status}`);
-                    toast.error(error)
+                    toast.error(response.statusText)
                     return;
                 }
 
@@ -83,6 +85,7 @@ const SearchPage = () => {
             }
 
             const result = await response.json();
+            console.log(result)
             const newArticles = Array.isArray(result) ? result : [result];
 
             setShoes(prevShoes => {
@@ -129,19 +132,35 @@ const SearchPage = () => {
         }
     };
 
+    const fetchSuggestions = async () => {
+        try {
+            const response = await fetch('https://localhost:8000/api/suggestions', {
+                credentials: 'include',
+                method: 'GET',
+            });
+            const data = await response.json();
+            console.log(data)
+            return data.last_scraped_articles.concat(data.most_popular_articles); // Combine both lists
+        } catch (error) {
+            console.error("Error fetching suggestions:", error);
+            return [];
+        }
+    };
+
     // Handler function to be passed to FilterSectionComponent
     const handleDataFetched = useCallback((data: any) => {
         setShoes(data);
     }, []);
 
     return (
-        <div className="relative h-full p-3">
+        <div className="relative h-full">
             <div className="text-2xl">Search for articles</div>
             <div className="h-95percents">
                 <div className="p-3 flex flex-col mr-2 h-full">
                     <div>
                         <div className={`mt-10`}>
                             <SearchBarComponent
+                                fetchSuggestions={fetchSuggestions}
                                 is_article_loading={loading}
                                 width={''}
                                 placeholder={'Search article*'}
@@ -150,7 +169,16 @@ const SearchPage = () => {
                             />
                         </div>
                     </div>
-                    <h2 className="text-xl mt-14 mb-5 text-gray-400">History</h2>
+                    <div
+                        className="flex flex-row justify-between items-center mb-2 mt-10">
+                        <h2 className="text-xl text-gray-400">
+                            <Link
+                                href="/search">History</Link></h2>
+                        <div className="">
+                            {isAuthenticated && shoes.length > 0 ?
+                                <ClearParsedArticles/> : <></>}
+                        </div>
+                    </div>
                     <div className="h-full">
                         <div className="flex gap-14 h-full items-start">
                             <div className="flex flex-grow flex-row">

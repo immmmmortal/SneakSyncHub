@@ -1,33 +1,56 @@
 from http import HTTPStatus
+from http.client import responses
 
 from django.contrib.auth import login, logout, authenticate
-from rest_framework import permissions
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from SneakSyncHub import settings
 from core.auth.auth_utils import get_access_token, set_httponly_cookie, \
-    UserTokenService, set_authentication_cookie
+    UserTokenService, set_authentication_cookie, login_authenticated_user
+from members.models import CustomUser
 from restapi.serializers import UserSerializer
 
 
-class CreateUserView(APIView):
+class SignupUserView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        data = request.data
+        email = data.get('email')
+        password = data.get('password')
 
-        if serializer.is_valid():
-            user = serializer.save()
-            login(request, user)
-            return Response({
-                "status": HTTPStatus.CREATED
-            })
-        else:
-            return Response({"errors": serializer.errors,
-                             "status": HTTPStatus.BAD_REQUEST})
+        if not email or not password:
+            return Response(
+                {'message': 'Email and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            return Response({'message': str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the email is already registered
+        if CustomUser.objects.filter(email=email).exists():
+            return Response({'message': 'Email is already registered.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Create a new user
+        user = CustomUser.objects.create_user(email=email,
+                                              password=password)
+        user.save()
+
+        # Authenticate and log in the user after successful registration
+        authenticated_user = authenticate(email=email, password=password)
+        response = login_authenticated_user(authenticated_user, request)
+
+        return response
 
 
-class ObtainAccessToken(APIView):
+class LoginUserView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -36,22 +59,8 @@ class ObtainAccessToken(APIView):
         password = data.get('password')
         user = authenticate(email=email, password=password)
 
-        if user and user.is_active:
-            login(request, user)
-            access_token = get_access_token(user)
-            response = Response(data={
-                "status": HTTPStatus.OK,
-                'message': "Authentication Successful!",
-            })
-            set_httponly_cookie(access_token, response)
-            # set_authentication_cookie(response)
-            print(response)
-            return response
-        else:
-            return Response(
-                {"status": 403,
-                 "message": "Invalid credentials"
-                 })
+        response = login_authenticated_user(user, request)
+        return response
 
 
 class LogoutView(APIView):

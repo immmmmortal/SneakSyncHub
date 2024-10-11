@@ -163,6 +163,11 @@ CORS_EXPOSE_HEADERS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost:3000',
+    'http://localhost:3000',  # Add http as well
+]
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

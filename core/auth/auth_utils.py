@@ -1,5 +1,8 @@
+from http import HTTPStatus
 from typing import Dict
 
+from django.contrib.auth import login
+from django.http import HttpRequest
 from rest_framework import exceptions
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -7,6 +10,26 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from SneakSyncHub import settings
 from members.models import CustomUser
+
+
+def login_authenticated_user(user: CustomUser,
+                             request: HttpRequest) -> Response:
+    if user and user.is_active:
+        login(request, user)
+        access_token = get_access_token(user)
+        response = Response(data={
+            "status": HTTPStatus.OK,
+            'message': "Operation Successful!",
+        })
+        set_httponly_cookie(access_token, response)
+        set_authentication_cookie(response)
+        print(response)
+        return response
+    else:
+        return Response(
+            {"status": 403,
+             "message": "Invalid credentials"
+             })
 
 
 def set_httponly_cookie(access_token: Token, response: Response):

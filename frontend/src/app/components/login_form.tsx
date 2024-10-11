@@ -1,10 +1,9 @@
 'use client'
 
-import {authenticate, useAuth} from "@/app/lib/auth";
+import {authenticate, signUp, useAuth} from "@/app/lib/auth";
 import SubmitButtonComponent from "@/app/components/submit_button";
-import React, {useActionState, useEffect} from 'react'
+import React, {useActionState, useEffect, useState} from 'react'
 import {responseFormat} from "@/app/interfaces/interfaces";
-import Link from "next/link";
 import Image from "next/image";
 import googleicon from '../static/images/google_icon.png'
 import githubicon from '../static/images/github_icon.png'
@@ -18,27 +17,40 @@ const initialState: responseFormat = {
 const LoginComponent = ({closeModal}: {
     closeModal: () => void
 }) => {
-    const [state, formAction, isPending] = useActionState(authenticate, initialState);
+    const [loginState, loginAction, loginIsPending] = useActionState(authenticate, initialState);
+    const [signUpState, signUpAction, signUpisPending] = useActionState(signUp, initialState);
     const {setAuthenticated} = useAuth()
-
+    const [formType, setFormType] = useState<'login' | 'signup'>('login');
 
     useEffect(() => {
-        if (state.status === 200) {
-            toast.success(state.message);
+        if (loginState.status === 200) {
+            toast.success(loginState.message);
             setAuthenticated(true)
             closeModal();
-        } else if (state.status !== 0) {
-            toast.info(state.message);
+        } else if (loginState.status !== 0) {
+            toast.info(loginState.message);
         }
-    }, [state.status, state.message, closeModal, setAuthenticated]);
+    }, [loginState.status, loginState.message, closeModal, setAuthenticated]);
+
+    useEffect(() => {
+        if (signUpState.status === 200) {
+            toast.success(signUpState.message);
+            setAuthenticated(true);
+            closeModal();
+        } else if (signUpState.status !== 0) {
+            toast.info(signUpState.message);
+        }
+    }, [signUpState.status, signUpState.message, closeModal, setAuthenticated]);
 
 
     return (
-        <form action={formAction} className="space-y-3">
+        <form action={formType === 'login' ? loginAction : signUpAction}
+              className="space-y-3">
             <div
                 className="flex-col rounded-lg bg-sneakers-first px-6 pb-4 pt-8 min-w-60 w-80">
-                <h1 className="flex text-white justify-center mb-5">Welcome
-                    back</h1>
+                <h1 className="flex text-white justify-center mb-5">{formType === 'login' ?
+                    'Welcome back' : 'Create an acccount'}
+                </h1>
                 <div className="w-full">
                     <div>
                         <label
@@ -53,7 +65,7 @@ const LoginComponent = ({closeModal}: {
                                 type="email"
                                 name="email"
                                 autoComplete="email"
-                                placeholder="Email address*"
+                                placeholder="Email address"
                                 required
                             />
                         </div>
@@ -71,20 +83,39 @@ const LoginComponent = ({closeModal}: {
                                 type="password"
                                 name="password"
                                 autoComplete="current-password"
-                                placeholder="Password*"
+                                placeholder="Password"
                                 required
                                 minLength={6}
                             />
                         </div>
                     </div>
                 </div>
-                <SubmitButtonComponent isPending={isPending}/>
+                <SubmitButtonComponent isPending={loginIsPending}/>
                 <div className="flex">
                     <div
-                        className="flex items-center justify-center w-full mt-4">
-                        Don&apos;t have an account? <Link href=""
-                                                          className="text-cyan-600 ml-2">Sign
-                        Up</Link>
+                        className="flex items-center justify-center w-full mt-4"
+                    >
+                        {formType === 'login' ? (
+                            <>
+                                Don&apos;t have an account?{' '}
+                                <span
+                                    className="text-cyan-600 ml-2 cursor-pointer"
+                                    onClick={() => setFormType('signup')}
+                                >
+                                    Sign Up
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                Already have an account?{' '}
+                                <span
+                                    className="text-cyan-600 ml-2 cursor-pointer"
+                                    onClick={() => setFormType('login')}
+                                >
+                                    Log In
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div

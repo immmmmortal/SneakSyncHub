@@ -11,12 +11,11 @@ from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe
-# from core.scraping.scrape import NikeScraper
+from core.scraping.scrape import NikeScraper
 from core.utils import get_user_profile
 from members.models import UserProfile
 from restapi.serializers import ShoeSerializer
 from .documents import ShoeDocument
-from core.scraping.scraping_compose import NikeScraper
 
 
 class ShoeSearchView(generics.ListAPIView):
@@ -74,10 +73,12 @@ class HomeView(APIView):
                          })
 
 
-class ShoeDetailedAPIView(APIView):
-    def get(self, request, shoe_id):
+class ShoeDetailedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, shoe_article):
         try:
-            shoe = Shoe.objects.get(id=shoe_id)
+            shoe = Shoe.objects.get(article=shoe_article)
             serializer = ShoeSerializer(shoe)
             return Response(serializer.data)
         except Shoe.DoesNotExist:
@@ -108,27 +109,77 @@ class ParsedShoeDeleteAPIView(APIView):
                             status=status.HTTP_404_NOT_FOUND)
 
 
+class SearchSuggestionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_profile = UserProfile.objects.get(user=request.user)
+
+        # Get user's scraped articles and scraped articles history
+        scraped_articles = user_profile.scraped_articles.all()
+        scraped_articles_history = user_profile.scraped_articles_history.all()
+
+        # Get the last 4 scraped articles from history, excluding those in scraped_articles
+        last_scraped_articles = scraped_articles_history.exclude(
+            id__in=scraped_articles.values_list('id', flat=True)
+        ).order_by('-id')[:4]
+
+        # If there are less than 4 articles, fill the rest with most popular articles
+        if len(last_scraped_articles) < 4:
+            # Calculate how many more articles are needed
+            needed_articles = 4 - len(last_scraped_articles)
+
+            # Get most popular articles (excluding those already in scraped_articles or last_scraped_articles)
+            most_popular_articles = Shoe.objects.exclude(
+                id__in=scraped_articles.values_list('id', flat=True)
+            ).exclude(
+                id__in=last_scraped_articles.values_list('id', flat=True)
+            ).order_by('-count')[:needed_articles]
+
+            # Combine the last scraped articles with most popular ones to meet the total requirement
+            last_scraped_articles = list(last_scraped_articles) + list(
+                most_popular_articles)
+
+        # If nothing is in scraped_articles or scraped_articles_history, show 6 most popular
+        if not scraped_articles.exists() and not scraped_articles_history.exists():
+            most_popular_articles = Shoe.objects.order_by('-count')[:6]
+            suggestions = [{'article': article.article} for article in
+                           most_popular_articles]
+            return Response({
+                'last_scraped_articles': [],
+                'most_popular_articles': suggestions,
+            })
+
+        # Prepare the response data
+        last_scraped_data = [{'article': article.article} for article in
+                             last_scraped_articles]
+
+        # Fetch additional 2 most popular articles if needed (total 6 results)
+        if len(last_scraped_data) < 6:
+            additional_popular_articles = Shoe.objects.exclude(
+                id__in=scraped_articles.values_list('id', flat=True)
+            ).exclude(
+                id__in=[article['article'] for article in
+                        last_scraped_data]
+            ).order_by('-count')[:(6 - len(last_scraped_data))]
+
+            popular_data = [{'article': article.article} for article in
+                            additional_popular_articles]
+        else:
+            popular_data = []
+
+        return Response({
+            'last_scraped_articles': last_scraped_data,
+            'most_popular_articles': popular_data,
+        })
+
+
 class ClearUserParsedArticles(APIView):
+    permission_classes = [IsAuthenticated]
+
     def delete(self, request):
         user_profile = get_user_profile(request)
         user_profile.scraped_articles.all().delete()
-        return Response(status=status.HTTP_200_OK)
-
-
-class ShoesView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        scraped_articles = Shoe.objects.all()
-        serializer = ShoeSerializer(scraped_articles, many=True)
-        return Response(serializer.data)
-
-
-class DeleteShoeView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def delete(self, request, shoe_id):
-        Shoe.objects.get(id=shoe_id).delete()
         return Response(status=status.HTTP_200_OK)
 
 
@@ -169,14 +220,17 @@ class FetchPageView(APIView):
                 image=product_info["image_url"],
                 name=product_info["name"],
                 article=article,
+                description=product_info["description"],
                 sizes=product_info["sizes"],
                 parsed_from="Nike"
             )
-            new_article.count += 1
-            new_article.save()
 
-            user_profile.scraped_articles.add(new_article)
-            user_profile.scraped_articles_history.add(article)
+            new_article.count += 1
+            try:
+                new_article.save(user_profile=user_profile)
+            except Exception as e:
+                return Response({"statusText": str(e)},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             serializer = ShoeSerializer(new_article)
             return Response(serializer.data,
@@ -189,3 +243,20 @@ class FetchPageView(APIView):
             user_profile.scraped_articles.add(existing_article)
             serializer = ShoeSerializer(existing_article)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ShoesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        scraped_articles = Shoe.objects.all()
+        serializer = ShoeSerializer(scraped_articles, many=True)
+        return Response(serializer.data)
+
+
+class DeleteShoeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, shoe_id):
+        Shoe.objects.get(id=shoe_id).delete()
+        return Response(status=status.HTTP_200_OK)

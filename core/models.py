@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.signals import post_save
 
 
 class Shoe(models.Model):
@@ -12,11 +13,20 @@ class Shoe(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     count = models.IntegerField(default=0)
     description = models.TextField()
-    details = models.TextField()
-    features = models.JSONField(default=list)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        user_profile = kwargs.pop('user_profile', None)
+
+        super(Shoe, self).save(*args, **kwargs)
+
+        if user_profile:
+            post_save.send(sender=self.__class__,
+                           instance=self,
+                           created=True,
+                           user=user_profile)
 
 
 class ShoePriceHistory(models.Model):
