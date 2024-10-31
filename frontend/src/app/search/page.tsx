@@ -20,6 +20,7 @@ const SearchPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const {isAuthenticated} = useAuth();
+    const [isKeywordFiltered, setIsKeywordFiltered] = useState(false);
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -154,7 +155,7 @@ const SearchPage = () => {
 
     return (
         <div className="relative h-full">
-            <div className="text-2xl">Search for articles</div>
+            <div className="text-3xl font-bold">Search for articles</div>
             <div className="h-95percents">
                 <div className="p-3 flex flex-col mr-2 h-full">
                     <div>
@@ -176,11 +177,12 @@ const SearchPage = () => {
                                 href="/search">History</Link></h2>
                         <div className="">
                             {isAuthenticated && shoes.length > 0 ?
-                                <ClearParsedArticles/> : <></>}
+                                <ClearParsedArticles shoes={shoes}
+                                                     setShoes={setShoes}/> : <></>}
                         </div>
                     </div>
                     <div className="h-full">
-                        <div className="flex gap-14 h-full items-start">
+                        <div className="flex gap-8 h-full items-start">
                             <div className="flex flex-grow flex-row">
                                 {isAuthenticated ? (
                                         <>
@@ -202,7 +204,13 @@ const SearchPage = () => {
                                                     />
                                                 ) : (
                                                     <DefaultViewComponent
-                                                        title="Start searching to fill history"/>
+                                                        title={
+                                                            isKeywordFiltered
+                                                                ? "No shoes match the selected filters"
+                                                                : "Start searching to fill history"
+                                                        }
+                                                    />
+
                                                 )
                                             )}
                                         </>) :
@@ -217,12 +225,14 @@ const SearchPage = () => {
                                     <FilterSectionComponent
                                         minPrice={initialMinPrice}
                                         maxPrice={initialMaxPrice}
+                                        setIsKeywordFiltered={setIsKeywordFiltered}
                                         onDataFetched={handleDataFetched} // Pass the handler
                                     />
                                 ) : (
                                     <FilterSectionComponent
                                         minPrice={0}
                                         maxPrice={200}
+                                        setIsKeywordFiltered={setIsKeywordFiltered}
                                         onDataFetched={handleDataFetched} // Pass the handler
                                     />
                                 )}

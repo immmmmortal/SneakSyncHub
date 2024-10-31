@@ -34,3 +34,10 @@ class ShoePriceHistory(models.Model):
                              related_name='price_history')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     date_recorded = models.DateField()
+
+
+class ShoesNews(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    image = models.URLField(max_length=400, blank=True)

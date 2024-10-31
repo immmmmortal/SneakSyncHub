@@ -1,4 +1,4 @@
-from django_elasticsearch_dsl import Document
+from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
 from .models import Shoe
@@ -19,6 +19,7 @@ class ShoeDocument(Document):
             'name',
             'price',
             'url',
+            'description',
             'image',
             'article',
             'sizes',

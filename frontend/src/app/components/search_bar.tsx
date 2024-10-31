@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useRef, useState, useEffect} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
 import {Tooltip} from 'react-tooltip';
@@ -30,6 +30,7 @@ const SearchBarComponent = ({
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false); // State for dropdown visibility
 
     const inputRef = useRef<HTMLInputElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null); // Ref for the whole component
 
     const handleSearch = async () => {
         if (search.trim() === "") {
@@ -79,8 +80,23 @@ const SearchBarComponent = ({
         }
     };
 
+    // Handle clicks outside to close suggestions
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false); // Hide suggestions if clicked outside
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     return (
-        <div className="flex flex-col items-start relative w-fit">
+        <div ref={containerRef}
+             className="flex flex-col items-start relative w-fit">
             {is_disabled && <Tooltip id="disabled-searchbar-tooltip"
                                      content="Login to start searching!"/>}
             <div

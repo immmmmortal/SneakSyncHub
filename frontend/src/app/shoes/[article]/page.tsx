@@ -129,7 +129,8 @@ const ShoeDetailPage = ({params}: ShoeDetailPageProps) => {
                     {shoe.price_history.length > 0 ? (
                         <PriceTrendChart priceHistory={shoe.price_history}/>
                     ) : (
-                        <p>No price history available for this shoe.</p>
+                        <p className="pb-10">No price history available for
+                            this shoe.</p>
                     )}
                 </div>
             </>}

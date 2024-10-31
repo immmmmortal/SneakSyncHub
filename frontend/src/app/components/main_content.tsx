@@ -44,10 +44,13 @@ const MainContentComponent: React.FC<{
             >
 
                 <ul className="[&_li]:p-4 mt-24 flex-grow flex flex-col gap-2 p-2 text-white">
-                    <li className="hover:bg-sneakers-second hover:rounded-2xl">
-                        <FontAwesomeIcon icon={faHouse} className="mr-2"/>
-                        SneakSyncHub
-                    </li>
+                    <Link href="/">
+                        <li className="hover:bg-sneakers-second hover:rounded-2xl">
+                            <FontAwesomeIcon icon={faHouse}
+                                             className="mr-2"/>
+                            SneakSyncHub
+                        </li>
+                    </Link>
                     <Link href="/search"
                           className="hover:bg-sneakers-second hover:rounded-2xl">
                         <li>

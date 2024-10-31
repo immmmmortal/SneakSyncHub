@@ -19,11 +19,18 @@
     "rc-slider": "^11.1.5",
     "react-detectable-overflow": "^0.8.0",
     "react-google-charts": "^5.1.0",
+    "react-multi-carousel": "^2.8.4",
+    "react-slick": "^0.30.2",
     "react-toastify": "^10.0.5",
     "react-tooltip": "^5.28.0",
     "react-transition-group": "^4.4.5",
     "reactjs-popup": "^2.0.6",
+    "slick-carousel": "^1.8.1",
+    "swiper": "^11.1.14",
     "use-immer": "^0.10.0",
     "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/swiper": "^6.0.0"
   }
 }

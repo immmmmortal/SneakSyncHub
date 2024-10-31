@@ -124,6 +124,18 @@ USE_I18N = True
 
 USE_TZ = True
 
+# settings.py
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{env("REDIS_HOST")}:6379/1',
+        # Adjust according to your Redis config
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 

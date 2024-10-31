@@ -5,6 +5,9 @@ import {AuthProvider} from "@/app/lib/auth";
 import {ToastContainer} from "react-toastify";
 import MainContentComponent from "@/app/components/main_content";
 import 'react-tooltip/dist/react-tooltip.css'
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
 
 export const metadata: Metadata = {
     title: "SneakSyncHub",

@@ -1,20 +1,21 @@
 from decimal import Decimal
 
 import lorem
+from django.core.cache import cache
 from django.shortcuts import render  # type: ignore
 from elasticsearch_dsl import Q
 from rest_framework import generics
 from rest_framework import status, permissions
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
-from core.models import Shoe
+from core.models import Shoe, ShoesNews
 from core.scraping.scrape import NikeScraper
 from core.utils import get_user_profile
 from members.models import UserProfile
-from restapi.serializers import ShoeSerializer
+from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
 from .documents import ShoeDocument
 
 
@@ -24,14 +25,19 @@ class ShoeSearchView(generics.ListAPIView):
 
     def get_queryset(self):
         query = self.kwargs.get('query')
-        min_price = self.request.query_params.get('min_price')
-        max_price = self.request.query_params.get('max_price')
+        min_price = self.request.query_params.get('min_price', None)
+        max_price = self.request.query_params.get('max_price', None)
+        keyword = self.request.query_params.get('keyword',
+                                                None)  # Can be
+        # multiple keywords
 
-        # Initialize the base Elasticsearch query
+        # Initialize the base Elasticsearch query (search by name,
+        # article, sizes, parsed_from, and description)
         elasticsearch_query = Q(
             "multi_match",
             query=query,
-            fields=['name', 'article', 'sizes', 'parsed_from']
+            fields=['name', 'description', 'article', 'sizes',
+                    'parsed_from']
         )
 
         # Apply the price range filter if specified
@@ -43,15 +49,28 @@ class ShoeSearchView(generics.ListAPIView):
                 price_filter['lte'] = float(max_price)
             elasticsearch_query &= Q('range', price=price_filter)
 
+        # Apply the keyword filter (searching for words in the
+        # description)
+        if keyword:
+            keywords = keyword.split(
+                ",")  # Split the keyword parameter into a list
+            keyword_queries = [Q('match', description=kw.strip()) for
+                               kw in
+                               keywords]
+            # Use 'must' instead of 'should' to enforce that all
+            # keywords must match
+            elasticsearch_query &= Q('bool', must=keyword_queries)
+
         # Get the authenticated user
         user = self.request.user
         user_profile = UserProfile.objects.get(user=user)
         parsed_shoes_ids = [str(shoe.id) for shoe in
                             user_profile.scraped_articles.all()]
 
-        # Initialize Elasticsearch search
+        # Initialize Elasticsearch search with the constructed query
         search = ShoeDocument.search().query(elasticsearch_query)
 
+        # Optionally limit results to shoes in the user's parsed list
         if parsed_shoes_ids:
             search = search.query('ids', values=parsed_shoes_ids)
 
@@ -109,6 +128,43 @@ class ParsedShoeDeleteAPIView(APIView):
                             status=status.HTTP_404_NOT_FOUND)
 
 
+class ShoesNewsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        news = ShoesNews.objects.all()
+        serializer = ShoesNewsSerializer(news, many=True)
+        return Response(serializer.data)
+
+
+class TrendingShoesView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Try to fetch the popular shoes from the cache
+        cached_popular_shoes = cache.get('popular_shoes')
+
+        if cached_popular_shoes:
+            # If cache is found, return it
+            return Response(cached_popular_shoes)
+
+        # Otherwise, query the database for the most popular shoes
+        popular_shoes = Shoe.objects.order_by('-count')[:10]
+
+        # Serialize the data
+        popular_shoes_data = [{'article': shoe.article,
+                               'name': shoe.name,
+                               'image_url': shoe.image,
+                               'price': shoe.price,
+                               } for shoe in
+                              popular_shoes]
+
+        # Store the result in cache for 1 hour (3600 seconds)
+        cache.set('popular_shoes', popular_shoes_data, timeout=3600)
+
+        return Response(popular_shoes_data)
+
+
 class SearchSuggestionView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -117,32 +173,46 @@ class SearchSuggestionView(APIView):
 
         # Get user's scraped articles and scraped articles history
         scraped_articles = user_profile.scraped_articles.all()
-        scraped_articles_history = user_profile.scraped_articles_history.all()
+        scraped_articles_history = (
+            user_profile.scraped_articles_history.all())
 
-        # Get the last 4 scraped articles from history, excluding those in scraped_articles
+        # Get the last 4 scraped articles from history, excluding
+        # those in scraped_articles
         last_scraped_articles = scraped_articles_history.exclude(
-            id__in=scraped_articles.values_list('id', flat=True)
+            article__in=scraped_articles.values_list('article',
+                                                     flat=True)
+            # Use 'article' field instead of 'id'
         ).order_by('-id')[:4]
 
-        # If there are less than 4 articles, fill the rest with most popular articles
+        # If there are less than 4 articles, fill the rest with
+        # most popular articles
         if len(last_scraped_articles) < 4:
-            # Calculate how many more articles are needed
             needed_articles = 4 - len(last_scraped_articles)
 
-            # Get most popular articles (excluding those already in scraped_articles or last_scraped_articles)
+            # Get most popular articles excluding already scraped
+            # or shown articles
             most_popular_articles = Shoe.objects.exclude(
-                id__in=scraped_articles.values_list('id', flat=True)
+                article__in=scraped_articles.values_list('article',
+                                                         flat=True)
+                # Use 'article' field
             ).exclude(
-                id__in=last_scraped_articles.values_list('id', flat=True)
+                article__in=last_scraped_articles.values_list(
+                    'article',
+                    flat=True)
+                # Use 'article' field
             ).order_by('-count')[:needed_articles]
 
-            # Combine the last scraped articles with most popular ones to meet the total requirement
-            last_scraped_articles = list(last_scraped_articles) + list(
+            # Combine last scraped articles with most popular ones
+            last_scraped_articles = list(
+                last_scraped_articles) + list(
                 most_popular_articles)
 
-        # If nothing is in scraped_articles or scraped_articles_history, show 6 most popular
-        if not scraped_articles.exists() and not scraped_articles_history.exists():
-            most_popular_articles = Shoe.objects.order_by('-count')[:6]
+        # If nothing is in scraped_articles or
+        # scraped_articles_history, show 6 most popular
+        if (not scraped_articles.exists() and not
+        scraped_articles_history.exists()):
+            most_popular_articles = Shoe.objects.order_by('-count')[
+                                    :6]
             suggestions = [{'article': article.article} for article in
                            most_popular_articles]
             return Response({
@@ -150,20 +220,24 @@ class SearchSuggestionView(APIView):
                 'most_popular_articles': suggestions,
             })
 
-        # Prepare the response data
-        last_scraped_data = [{'article': article.article} for article in
+        # Prepare response data
+        last_scraped_data = [{'article': article.article} for article
+                             in
                              last_scraped_articles]
 
-        # Fetch additional 2 most popular articles if needed (total 6 results)
+        # Fetch additional articles to make total 6 suggestions
         if len(last_scraped_data) < 6:
             additional_popular_articles = Shoe.objects.exclude(
-                id__in=scraped_articles.values_list('id', flat=True)
+                article__in=scraped_articles.values_list('article',
+                                                         flat=True)
+                # Use 'article' field
             ).exclude(
-                id__in=[article['article'] for article in
-                        last_scraped_data]
+                article__in=[article['article'] for article in
+                             last_scraped_data]
             ).order_by('-count')[:(6 - len(last_scraped_data))]
 
-            popular_data = [{'article': article.article} for article in
+            popular_data = [{'article': article.article} for article
+                            in
                             additional_popular_articles]
         else:
             popular_data = []
@@ -179,7 +253,7 @@ class ClearUserParsedArticles(APIView):
 
     def delete(self, request):
         user_profile = get_user_profile(request)
-        user_profile.scraped_articles.all().delete()
+        user_profile.scraped_articles.clear()
         return Response(status=status.HTTP_200_OK)
 
 
@@ -189,8 +263,9 @@ class FetchPageView(APIView):
 
     def get(self, request) -> Response:
         user_profile = get_user_profile(request)
-        scraped_articles_history = user_profile.scraped_articles.all().order_by(
-            '-created_at')
+        scraped_articles_history = (
+            user_profile.scraped_articles.all().order_by(
+                '-created_at'))
         article_data = ShoeSerializer(scraped_articles_history,
                                       many=True)
         return Response(
@@ -203,7 +278,8 @@ class FetchPageView(APIView):
         user_profile = get_user_profile(request)
         article = request.data.get("article")
 
-        existing_article = Shoe.objects.filter(article=article).first()
+        existing_article = Shoe.objects.filter(
+            article=article).first()
 
         if not existing_article:
             # Article does not exist, so scrape and add it
@@ -211,7 +287,8 @@ class FetchPageView(APIView):
             product_info = scraper.get_product_info()
 
             price_decimal = Decimal(
-                product_info["price"].replace("$", "").replace(",", "")
+                product_info["price"].replace("$", "").replace(",",
+                                                               "")
             )
 
             new_article = Shoe(
@@ -242,7 +319,8 @@ class FetchPageView(APIView):
             # Article already exists, add it to the user's profile
             user_profile.scraped_articles.add(existing_article)
             serializer = ShoeSerializer(existing_article)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data,
+                            status=status.HTTP_200_OK)
 
 
 class ShoesView(APIView):

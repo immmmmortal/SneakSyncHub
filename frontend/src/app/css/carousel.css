@@ -1,0 +1,42 @@
+/* carousel.css */
+
+/* Style for the carousel container */
+.custom-carousel {
+    position: relative; /* Optional: for positioning */
+    margin: 20px 0; /* Optional: margin for the entire carousel */
+}
+
+/* Style for individual shoe items */
+.shoe-item {
+    background-color: #f8f9fa; /* Light background for items */
+    border-radius: 8px; /* Rounded corners */
+    padding: 15px; /* Padding inside the item */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
+    transition: transform 0.2s; /* Smooth transform on hover */
+    margin: 0 10px; /* Margin for spacing between items */
+    text-align: center; /* Center the text */
+}
+
+/* Optional: Scale effect on hover */
+.shoe-item:hover {
+    transform: scale(1.05); /* Slightly enlarge the item */
+}
+
+/* Style for shoe images */
+.shoe-image {
+    max-width: 100%; /* Responsive image */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 5px; /* Optional: rounded image */
+}
+
+/* Style for shoe names and descriptions */
+.shoe-name {
+    font-size: 1.2rem; /* Font size for shoe name */
+    font-weight: bold; /* Bold text */
+    margin: 10px 0 5px; /* Margin for spacing */
+}
+
+.shoe-description {
+    font-size: 0.9rem; /* Font size for description */
+    color: #6c757d; /* Optional: gray color */
+}
