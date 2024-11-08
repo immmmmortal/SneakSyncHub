@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     description: "Easily gather sneakers info",
 };
 
+
 export default function RootLayout({
                                        children,
                                    }: {
@@ -23,6 +24,7 @@ export default function RootLayout({
         <html lang="en">
         <body className="bg-sneakers-second h-full w-full fixed">
         <AuthProvider>
+
             <MainContentComponent>
                 <ToastContainer
                     position="bottom-right"
@@ -30,6 +32,7 @@ export default function RootLayout({
                 />
                 {children}
             </MainContentComponent>
+
         </AuthProvider>
         </body>
         </html>

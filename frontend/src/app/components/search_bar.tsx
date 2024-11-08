@@ -96,7 +96,7 @@ const SearchBarComponent = ({
 
     return (
         <div ref={containerRef}
-             className="flex flex-col items-start relative w-fit">
+             className="flex flex-col items-start mr-5 relative w-fit justify-center">
             {is_disabled && <Tooltip id="disabled-searchbar-tooltip"
                                      content="Login to start searching!"/>}
             <div

@@ -12,6 +12,7 @@ import ArticleInfoLoadingComponent
 import {toast} from "react-toastify";
 import Link from "next/link";
 import ClearParsedArticles from "@/app/components/clear_parsed_articles";
+import MultipleSelectComponent from "@/app/components/multiple_select";
 
 const SearchPage = () => {
     const [shoes, setShoes] = useState<Shoe[]>([]);
@@ -21,6 +22,7 @@ const SearchPage = () => {
     const [error, setError] = useState<string | null>(null);
     const {isAuthenticated} = useAuth();
     const [isKeywordFiltered, setIsKeywordFiltered] = useState(false);
+    const [selectedSources, setSelectedSources] = useState<string[]>(['Nike', 'Adidas']);
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -76,7 +78,10 @@ const SearchPage = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({article: searchQuery}),
+                body: JSON.stringify({
+                    article: searchQuery,
+                    parse_from: selectedSources,
+                }),
             });
 
             if (!response.ok) {
@@ -159,7 +164,7 @@ const SearchPage = () => {
             <div className="h-95percents">
                 <div className="p-3 flex flex-col mr-2 h-full">
                     <div>
-                        <div className={`mt-10`}>
+                        <div className={`mt-10 flex flex-row content-center`}>
                             <SearchBarComponent
                                 fetchSuggestions={fetchSuggestions}
                                 is_article_loading={loading}
@@ -168,6 +173,8 @@ const SearchPage = () => {
                                 onSearch={handleSearch}
                                 is_disabled={!isAuthenticated} // Pass the search handler
                             />
+                            <MultipleSelectComponent
+                                onChange={setSelectedSources}/>
                         </div>
                     </div>
                     <div

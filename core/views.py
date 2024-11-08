@@ -12,11 +12,12 @@ from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe, ShoesNews
-from core.scraping.scrape import NikeScraper
+from core.scraping.selenium_scrapers import NikeProductParser
 from core.utils import get_user_profile
 from members.models import UserProfile
 from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
 from .documents import ShoeDocument
+from .scraping.product_service import ProductService
 
 
 class ShoeSearchView(generics.ListAPIView):
@@ -268,11 +269,7 @@ class FetchPageView(APIView):
                 '-created_at'))
         article_data = ShoeSerializer(scraped_articles_history,
                                       many=True)
-        return Response(
-            {
-                "article_data": article_data.data,
-            }
-        )
+        return Response({"article_data": article_data.data})
 
     def post(self, request) -> Response:
         user_profile = get_user_profile(request)
@@ -281,46 +278,24 @@ class FetchPageView(APIView):
         existing_article = Shoe.objects.filter(
             article=article).first()
 
-        if not existing_article:
-            # Article does not exist, so scrape and add it
-            scraper = NikeScraper(article)
-            product_info = scraper.get_product_info()
-
-            price_decimal = Decimal(
-                product_info["price"].replace("$", "").replace(",",
-                                                               "")
-            )
-
-            new_article = Shoe(
-                url=product_info["url"],
-                price=price_decimal,
-                image=product_info["image_url"],
-                name=product_info["name"],
-                article=article,
-                description=product_info["description"],
-                sizes=product_info["sizes"],
-                parsed_from="Nike"
-            )
-
-            new_article.count += 1
-            try:
-                new_article.save(user_profile=user_profile)
-            except Exception as e:
-                return Response({"statusText": str(e)},
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-            serializer = ShoeSerializer(new_article)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-        else:
+        if existing_article:
             existing_article.count += 1
             existing_article.save()
-
-            # Article already exists, add it to the user's profile
             user_profile.scraped_articles.add(existing_article)
             serializer = ShoeSerializer(existing_article)
             return Response(serializer.data,
                             status=status.HTTP_200_OK)
+
+        try:
+            new_article, _ = ProductService.save_and_scrape(article,
+                                                            NikeProductParser,
+                                                            user_profile)
+            serializer = ShoeSerializer(new_article)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"statusText": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ShoesView(APIView):
