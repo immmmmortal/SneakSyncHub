@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import lorem
 from django.core.cache import cache
 from django.shortcuts import render  # type: ignore
@@ -12,12 +10,11 @@ from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe, ShoesNews
-from core.scraping.selenium_scrapers import NikeProductParser
 from core.utils import get_user_profile
 from members.models import UserProfile
 from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
 from .documents import ShoeDocument
-from .scraping.product_service import ProductService
+from .scraping.product_service import ProductService, NikeSetup, AdidasSetup
 
 
 class ShoeSearchView(generics.ListAPIView):
@@ -264,38 +261,76 @@ class FetchPageView(APIView):
 
     def get(self, request) -> Response:
         user_profile = get_user_profile(request)
-        scraped_articles_history = (
-            user_profile.scraped_articles.all().order_by(
-                '-created_at'))
-        article_data = ShoeSerializer(scraped_articles_history,
-                                      many=True)
+        scraped_articles_history = user_profile.scraped_articles.all().order_by(
+            '-created_at')
+        article_data = ShoeSerializer(scraped_articles_history, many=True)
         return Response({"article_data": article_data.data})
 
     def post(self, request) -> Response:
+        # Map brands to their respective setup classes
+        setup_map = {
+            "Adidas": AdidasSetup,
+            "Nike": NikeSetup,
+        }
+
         user_profile = get_user_profile(request)
         article = request.data.get("article")
+        parse_from = request.data.get("parse_from", [])
 
-        existing_article = Shoe.objects.filter(
-            article=article).first()
+        if not parse_from:
+            return Response({"statusText": "parse_from is required"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
+        # Check if the article already exists in the database
+        existing_article = Shoe.objects.filter(article=article).first()
         if existing_article:
             existing_article.count += 1
             existing_article.save()
             user_profile.scraped_articles.add(existing_article)
             serializer = ShoeSerializer(existing_article)
-            return Response(serializer.data,
-                            status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        try:
-            new_article, _ = ProductService.save_and_scrape(article,
-                                                            NikeProductParser,
-                                                            user_profile)
-            serializer = ShoeSerializer(new_article)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"statusText": str(e)},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Variable to store the first successful result
+        successful_scrape = None
+
+        # Try scraping for each brand specified in `parse_from`
+        for brand in parse_from:
+            setup_class = setup_map.get(brand)
+            if not setup_class:
+                continue
+
+            try:
+                # Attempt to initialize the setup instance and parser
+                setup_instance = setup_class(article)
+                parser = setup_instance.initialize_parser()
+            except Exception as setup_error:
+                print(f"Failed to initialize setup for {brand}: {setup_error}")
+                continue  # Skip to the next brand if setup fails
+
+            try:
+                # Fetch and save product data via ProductService with
+                # `parsed_from`
+                new_article, created = ProductService.get_and_save_product_data(
+                    parser, user_profile, brand
+                )
+                if new_article and not successful_scrape:
+                    # Capture the first successful scrape response
+                    successful_scrape = new_article
+
+            except Exception as e:
+                print(f"Failed scraping with {brand}: {e}")
+                continue  # Try the next brand if this one fails
+
+        # Check if we had a successful scrape after looping
+        if successful_scrape:
+            serializer = ShoeSerializer(successful_scrape)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # If all scrapers fail, return an error
+        return Response(
+            {"statusText": "Failed to scrape data from any source"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 class ShoesView(APIView):
