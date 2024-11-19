@@ -17,3 +17,14 @@ export const getCsrfToken = () => {
         .find(row => row.startsWith('csrftoken='))
         ?.split('=')[1];
 };
+
+export function safeParseSizes(sizes: string): string[] {
+    try {
+        // Replace single quotes with double quotes to make the string JSON-compatible
+        const sanitizedSizes = sizes.replace(/'/g, '"');
+        return JSON.parse(sanitizedSizes);
+    } catch {
+        // Return an empty array if parsing fails
+        return [];
+    }
+}

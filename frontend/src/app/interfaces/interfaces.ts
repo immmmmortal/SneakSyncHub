@@ -20,6 +20,7 @@ export interface ClickOutsideRefInterface {
 }
 
 export interface Shoe {
+    parsed_from: string;
     price_history: PriceHistory[];
     description: string;
     id: number;
