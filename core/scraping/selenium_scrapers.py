@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 
 from SneakSyncHub.settings import env
 from core.formatting.sizes import Formatter
-from core.scraping.product_service import ScraperBase
+from core.scraping.base import ScraperBase
 
 
 class ProductData(TypedDict):
@@ -129,7 +129,7 @@ class NikeProductScraper(ScraperBase):
     def __compose_search_page_url(self, article) -> str:
         # take URL template for certain site and insert article in
         # it to get search page url
-        return self._SEARCH_PAGE_URL_TEMPLATE.format(article, article)
+        return self._SEARCH_URL_TEMPLATE.format(article, article)
 
     def _extract_product_url(self) -> str:
         # we extract product url from search page results to
@@ -217,7 +217,6 @@ class ParserBase(ABC):
                 "description": product_description,
                 "image": product_image,
             }
-            self._driver.quit()
         except Exception as e:
             print(f"Error occurred while scraping product {self.article}: {e}")
         finally:

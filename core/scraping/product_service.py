@@ -11,12 +11,6 @@ from core.scraping.selenium_scrapers import (
 )
 
 
-class ScraperBase:
-    brand: str = ""
-    is_api_based: bool = False
-    __SEARCH_API_URL_TEMPLATE: str = ""
-
-
 class NikeSetup:
     def __init__(self, article):
         self.article = article

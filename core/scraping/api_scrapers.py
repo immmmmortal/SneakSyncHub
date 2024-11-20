@@ -3,7 +3,7 @@ from typing import List, Dict
 from curl_cffi import requests as cureq
 from curl_cffi.requests import exceptions
 
-from core.scraping.product_service import ScraperBase
+from core.scraping.base import ScraperBase
 from core.scraping.selenium_scrapers import ProductData
 
 
@@ -39,13 +39,13 @@ class APIClient:
 
 class AdidasProductScraper(ScraperBase):
     brand = "Adidas"
-    is_api_abased = True
+    is_api_based = True
     __SEARCH_URL_TEMPLATE = "https://www.adidas.com/api/products/{article}"
 
     def __init__(self, article: str, api_client: APIClient):
         self._api_client = api_client
         self._article = article
-        self._search_url = self.__SEARCH_API_URL_TEMPLATE.format(
+        self._search_url = self.__SEARCH_URL_TEMPLATE.format(
             article=self._article)
 
     def fetch_product_info(self) -> Dict:
