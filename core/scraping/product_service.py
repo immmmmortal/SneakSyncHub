@@ -1,5 +1,3 @@
-from abc import ABC
-
 from core.models import Shoe
 from core.scraping.api_scrapers import (
     APIClient,
@@ -15,7 +13,7 @@ from core.scraping.selenium_scrapers import (
 
 class ScraperBase:
     brand: str = ""
-    is_api_abased: bool = False
+    is_api_based: bool = False
     __SEARCH_API_URL_TEMPLATE: str = ""
 
 
