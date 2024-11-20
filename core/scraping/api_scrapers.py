@@ -3,6 +3,7 @@ from typing import List, Dict
 from curl_cffi import requests as cureq
 from curl_cffi.requests import exceptions
 
+from core.scraping.product_service import ScraperBase
 from core.scraping.selenium_scrapers import ProductData
 
 
@@ -36,14 +37,16 @@ class APIClient:
             )
 
 
-class AdidasProductScraper:
+class AdidasProductScraper(ScraperBase):
+    brand = "Adidas"
     is_api_abased = True
-    __SEARCH_API_URL_TEMPLATE = "https://www.adidas.com/api/products/{article}"
+    __SEARCH_URL_TEMPLATE = "https://www.adidas.com/api/products/{article}"
 
     def __init__(self, article: str, api_client: APIClient):
         self._api_client = api_client
         self._article = article
-        self._search_url = self.__SEARCH_API_URL_TEMPLATE.format(article=self._article)
+        self._search_url = self.__SEARCH_API_URL_TEMPLATE.format(
+            article=self._article)
 
     def fetch_product_info(self) -> Dict:
         return self._api_client.get(self._search_url)
@@ -81,13 +84,15 @@ class AdidasProductParser:
             available_sizes = self.__format_product_sizes(self._product_sizes)
             __product_data: ProductData = {
                 "article": self._product_info.get("id", ""),
-                "url": self._product_info.get("meta_data", {}).get("canonical", ""),
+                "url": self._product_info.get("meta_data", {}).get("canonical",
+                                                                   ""),
                 "name": self._product_info.get("name", ""),
                 "price": self._product_info.get("pricing_information", {}).get(
                     "currentPrice", ""
                 ),
                 "sizes": available_sizes,
-                "description": self._product_info.get("product_description", {}).get(
+                "description": self._product_info.get("product_description",
+                                                      {}).get(
                     "text", ""
                 ),
                 "image": self._product_info.get("view_list", [{}])[0].get(

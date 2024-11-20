@@ -1,7 +1,6 @@
 import time
 from abc import ABC, abstractmethod
 from collections import namedtuple
-from decimal import Decimal, InvalidOperation
 from typing import TypedDict, Optional
 
 from bs4 import BeautifulSoup
@@ -12,6 +11,7 @@ from selenium.webdriver.common.by import By
 
 from SneakSyncHub.settings import env
 from core.formatting.sizes import Formatter
+from core.scraping.product_service import ScraperBase
 
 
 class ProductData(TypedDict):
@@ -74,9 +74,10 @@ class BSManager:
         return soup
 
 
-class NikeProductScraper:
+class NikeProductScraper(ScraperBase):
+    brand = "Nike"
     is_api_based = False
-    _SEARCH_PAGE_URL_TEMPLATE = "https://www.nike.com/w?q={0}&vst={1}"
+    _SEARCH_URL_TEMPLATE = "https://www.nike.com/w?q={0}&vst={1}"
 
     def __init__(self, driver: WebDriver, article: str):
         self._driver = driver
@@ -206,21 +207,21 @@ class ParserBase(ABC):
             available_sizes = self._extract_and_format_available_sizes(
                 product_sizes)
             name = self._extract_product_name()
+
+            self.__product_info: ProductData = {
+                "url": self._product_url,
+                "article": self.article,
+                "name": name,
+                "price": product_price,
+                "sizes": available_sizes,
+                "description": product_description,
+                "image": product_image,
+            }
+            self._driver.quit()
         except Exception as e:
             print(f"Error occurred while scraping product {self.article}: {e}")
         finally:
             self._driver.quit()
-
-        self.__product_info: ProductData = {
-            "url": self._product_url,
-            "article": self.article,
-            "name": name,
-            "price": product_price,
-            "sizes": available_sizes,
-            "description": product_description,
-            "image": product_image,
-        }
-        self._driver.quit()
 
     def get_product_data(self) -> ProductData:
         self.__compose_product_info()
