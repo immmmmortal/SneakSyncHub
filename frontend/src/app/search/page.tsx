@@ -186,7 +186,7 @@ const SearchPage = () => {
               <MultipleSelectComponent onChange={setSelectedSources} />
             </div>
           </div>
-          <div className="flex flex-row justify-between items-center mb-2 mt-10">
+          <div className="flex flex-row justify-between items-center mb-2 mt-10 min-h-12">
             <h2 className="text-xl text-gray-400">
               <Link href="/search">History</Link>
             </h2>
