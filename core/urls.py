@@ -8,7 +8,7 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path("", views.HomeView.as_view()),
-    path("fetch", views.SearchPageView.as_view()),
+    path("fetch", views.FetchShoesView.as_view()),
     path("shoes", views.ShoesView.as_view()),
     path("shoes/clear", views.ClearUserParsedArticles.as_view()),
     path("shoes/<int:shoe_id>/delete", views.ParsedShoeDeleteAPIView.as_view()),

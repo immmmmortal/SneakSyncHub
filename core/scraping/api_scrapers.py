@@ -88,7 +88,10 @@ class AdidasProductParser:
                                                                    ""),
                 "name": self._product_info.get("name", ""),
                 "price": self._product_info.get("pricing_information", {}).get(
-                    "currentPrice", ""
+                    "standard_price", ""
+                ),
+                "sale_price": self._product_info.get("pricing_information", {}).get(
+                    "sale_price", ""
                 ),
                 "sizes": available_sizes,
                 "description": self._product_info.get("product_description",

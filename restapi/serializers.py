@@ -16,10 +16,7 @@ class ShoeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Shoe
-        fields = ['id', 'name', 'price', 'url', 'image', 'article',
-                  'sizes',
-                  'parsed_from', 'created_at', 'count', 'description',
-                  'price_history']
+        fields = '__all__'
 
 
 class ShoesNewsSerializer(serializers.ModelSerializer):

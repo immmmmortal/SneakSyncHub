@@ -18,6 +18,7 @@ class ProductData(TypedDict):
     article: str
     url: str
     price: str
+    sale_price: str
     image: str
     name: str
     sizes: list[str]
@@ -27,6 +28,7 @@ class ProductData(TypedDict):
 html_identifiers_tuple = namedtuple(
     "HTMLSelectors",
     [
+        "initial_product_price_id",
         "product_card_id",
         "product_price_id",
         "product_sizes_id",
@@ -200,7 +202,8 @@ class ParserBase(ABC):
 
     def __compose_product_info(self) -> None:
         try:
-            product_price = self._extract_and_format_product_price()
+            product_price,initial_product_price = (
+                self._extract_and_format_product_price())
             product_sizes = self._extract_product_sizes()
             product_image = self._extract_product_image_url()
             product_description = self._extract_product_description()
@@ -213,6 +216,7 @@ class ParserBase(ABC):
                 "article": self.article,
                 "name": name,
                 "price": product_price,
+                "sale_price": initial_product_price,
                 "sizes": available_sizes,
                 "description": product_description,
                 "image": product_image,
@@ -229,6 +233,7 @@ class ParserBase(ABC):
 
 class NikeProductParser(ParserBase):
     HTML_IDENTIFIERS = html_identifiers_tuple(
+        initial_product_price_id="initialPrice-container",
         product_card_id="product-card__body",
         product_price_id="price-container",
         product_sizes_id="pdp-grid-selector-grid",
@@ -271,12 +276,35 @@ class NikeProductParser(ParserBase):
         return product_name
 
     def _extract_and_format_product_price(self):
-        # extract product price
-        raw_product_price = self._product_page.find(
+        # Extract the price container
+        price_container = self._product_page.find(
             "div", {"id": self._html_identifiers.product_price_id}
-        ).next_element.get_text()
-        product_price = Formatter.get_decimal_from_string(raw_product_price)
-        return product_price
+        )
+        if not price_container:
+            return None, None  # Return None if the price container is not found
+
+        # Extract the current price
+        current_price_element = price_container.find(
+            "span", {"data-testid": "currentPrice-container"}
+        )
+        current_price = (
+            Formatter.get_decimal_from_string(current_price_element.get_text())
+            if current_price_element
+            else None
+        )
+
+        # Extract the initial price, if available
+        initial_price_element = price_container.find(
+            "span",
+            {"data-testid": self._html_identifiers.initial_product_price_id}
+        )
+        initial_price = (
+            Formatter.get_decimal_from_string(initial_price_element.get_text())
+            if initial_price_element
+            else None
+        )
+
+        return current_price, initial_price
 
     def _extract_product_description(self):
         # extract product description

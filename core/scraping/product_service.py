@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from core.models import Shoe
 from core.scraping.api_scrapers import (
     APIClient,
@@ -44,13 +46,21 @@ class ProductService:
             product_data = parser.get_product_data()
             product_data["parsed_from"] = parsed_from  # Set parsed_from field
 
+            sale_price = (
+                Decimal(product_data["sale_price"]) if product_data[
+                    "sale_price"] else None
+            )
+            price = Decimal(product_data["price"]) if product_data[
+                "price"] else None
+
             # Check if the product already exists in the database
             article = product_data["article"]
             shoe, created = Shoe.objects.update_or_create(
                 article=article,
                 defaults={
                     "name": product_data["name"],
-                    "price": product_data["price"],
+                    "sale_price": sale_price,
+                    "price": price,
                     "sizes": product_data["sizes"],
                     "url": product_data["url"],
                     "description": product_data["description"],

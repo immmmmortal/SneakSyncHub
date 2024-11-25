@@ -123,12 +123,10 @@ services:
     networks:
       - backend
 
-
-
-
 volumes:
   postgres_data:
   elasticsearch_data:
 
 networks:
   backend:
+
