@@ -40,6 +40,13 @@ const SearchPage = () => {
         });
 
         if (!response.ok) {
+          if (response.status === 429) {
+            // Handle rate limit exceeded
+            toast.error(
+              "You have exceeded the rate limit for your subscription. Please upgrade to continue.",
+            );
+            return; // Skip further processing if rate limit is exceeded
+          }
           setError(`HTTP error! Status: ${response.status}`);
           toast.error(response.statusText);
           return;
@@ -87,6 +94,13 @@ const SearchPage = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          // Handle rate limit exceeded
+          toast.error(
+            "You have exceeded the rate limit for your subscription. Please upgrade to continue.",
+          );
+          return; // Skip further processing if rate limit is exceeded
+        }
         setError(`HTTP error! Status: ${response.status}`);
         toast.error(error);
         return;
@@ -105,8 +119,21 @@ const SearchPage = () => {
           (shoe) => !newArticleSet.has(shoe.id),
         );
 
-        // Add new articles to the top
-        return [...newArticles, ...filteredShoes];
+        // If the article exists, move it to the top
+        const updatedShoes = newArticles.map((newArticle) => {
+          const existingArticleIndex = prevShoes.findIndex(
+            (shoe) => shoe.id === newArticle.id,
+          );
+          if (existingArticleIndex !== -1) {
+            const updatedShoes = [...prevShoes];
+            updatedShoes[existingArticleIndex] = newArticle; // Update the existing shoe with the new data
+            return updatedShoes;
+          }
+          return newArticle; // If not found, just return the new article
+        });
+
+        // Add new articles to the top and return the updated list
+        return [...updatedShoes, ...filteredShoes];
       });
     } catch (error) {
       console.error("Error:", error);

@@ -100,21 +100,51 @@ DATABASES = {"default": env.db()}
 AUTH_USER_MODEL = "members.CustomUser"
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation"
+                ".UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation"
+                ".MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation"
+                ".CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation"
+                ".NumericPasswordValidator",
     },
 ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',  # Change to WARNING to suppress SQL logs
+            'propagate': False,
+        },
+    },
+}
 
 LANGUAGE_CODE = "en-us"
 
@@ -153,6 +183,12 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+RATE_LIMITS = {
+    'free': 10,
+    'premium': 20,
+}
+RATE_LIMIT_WINDOW = 3600  # Time window in seconds (1 hour)
 
 CORS_ALLOWED_ORIGINS = [
     "https://localhost",
@@ -207,7 +243,8 @@ ELASTICSEARCH_DSL = {
 
 # settings.py
 CELERY_BROKER_URL = f'redis://{env("CELERY_HOST")}:6379/0'  # Redis broker URL
-CELERY_RESULT_BACKEND = f'redis://{env("CELERY_HOST")}:6379/0'  # Redis result backend URL
+CELERY_RESULT_BACKEND = f'redis://{env("CELERY_HOST")}:6379/0'  # Redis
+# result backend URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

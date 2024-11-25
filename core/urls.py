@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework import routers
 
 from core import views
+from core.views import UpdateUserSubscription
 
 router = routers.DefaultRouter()
 
@@ -17,4 +18,5 @@ urlpatterns = [
     path("suggestions", views.SearchSuggestionView.as_view()),
     path("trending_shoes", views.TrendingShoesView.as_view()),
     path("news", views.ShoesNewsView.as_view()),
+    path('update-subscription/', UpdateUserSubscription.as_view(), )
 ]

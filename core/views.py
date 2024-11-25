@@ -15,6 +15,7 @@ from core.utils import get_user_profile, filter_api_based_brands, \
 from members.models import UserProfile
 from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
 from .documents import ShoeDocument
+from .redis_utils.rate_limiter import rate_limit
 from .scraping.product_service import ProductService, NikeSetup, AdidasSetup
 
 
@@ -264,6 +265,39 @@ class SearchSuggestionView(APIView):
         )
 
 
+class UpdateUserSubscription(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Get the user profile
+        user_profile = get_user_profile(request)
+        user = user_profile.user
+
+        # Get the selected plan from the request body
+        plan = request.data.get('plan')
+
+        if plan not in ['free', 'premium']:
+            return Response(
+                {'detail': 'Invalid plan selected.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # If the user is upgrading to premium, reset the rate counter and set the rate limit to 25
+        if plan == 'premium':
+            user_profile.rate_counter = 0  # Reset the rate counter
+            user_profile.rate_limit = 25   # Set the rate limit to 25 for premium users
+
+        # Update the user's subscription to the selected plan
+        user.subscription = plan
+        user.save()
+
+        # Return a success response with updated subscription status
+        return Response(
+            {'detail': 'Subscription updated successfully.',
+             'subscription': plan},
+            status=status.HTTP_200_OK
+        )
+
 class ClearUserParsedArticles(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -280,11 +314,11 @@ class SearchPageView(APIView):
     def get(self, request) -> Response:
         user_profile = get_user_profile(request)
         scraped_articles_history = user_profile.scraped_articles.all().order_by(
-            "-created_at"
-        )
+            "-created_at")
         article_data = ShoeSerializer(scraped_articles_history, many=True)
         return Response({"article_data": article_data.data})
 
+    @rate_limit
     def post(self, request) -> Response:
         brand_map = {
             "Adidas": AdidasSetup,
@@ -301,13 +335,18 @@ class SearchPageView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Filter API-based brands using the filter_api_based_brands function
+        # Filter API-based brands
         api_based_brands = filter_api_based_brands(parse_from, scrapers_mapping)
 
+        # Check if article already exists
         existing_article = Shoe.objects.filter(article=article).first()
+
         if existing_article:
+            # Update the existing article's count
             existing_article.count += 1
             existing_article.save()
+            # Reorder the article in the user's scraped articles (move to top)
+            user_profile.scraped_articles.remove(existing_article)
             user_profile.scraped_articles.add(existing_article)
             serializer = ShoeSerializer(existing_article)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -350,8 +389,8 @@ class SearchPageView(APIView):
                     parser = setup_instance.initialize_parser()
                     new_article, created = (
                         ProductService.get_and_save_product_data(
-                        parser, user_profile, brand
-                    ))
+                            parser, user_profile, brand
+                        ))
                     if new_article and not successful_scrape:
                         successful_scrape = new_article
                 except Exception as e:

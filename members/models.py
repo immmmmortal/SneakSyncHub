@@ -28,6 +28,16 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin, CustomUserManager):
     email = models.EmailField(unique=True)
 
+    SUBSCRIPTION_CHOICES = [
+        ('free', 'Free'),
+        ('premium', 'Premium'),
+    ]
+    subscription = models.CharField(
+        max_length=10,
+        choices=SUBSCRIPTION_CHOICES,
+        default='free',
+    )
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -44,6 +54,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name="user"
     )
+    rate_counter = models.IntegerField(default=0)
+    rate_limit = models.IntegerField(default=10)
     profile_picture = models.ImageField(
         upload_to="profile_pics/", default="default_profile_picture.jpg"
     )
