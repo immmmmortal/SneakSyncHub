@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe, ShoesNews
 from core.utils import get_user_profile, filter_api_based_brands, scrapers_mapping
-from members.models import UserProfile
+from members.models import UserProfile, CustomUser
 from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
 from .documents import ShoeDocument
 from .redis_utils.rate_limiter import rate_limit
@@ -242,6 +242,10 @@ class SearchSuggestionView(APIView):
 
 class UpdateUserSubscription(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+        return Response({"subscription":CustomUser.objects.get(
+            email=request.user.email).subscription})
 
     def post(self, request):
         # Get the user profile

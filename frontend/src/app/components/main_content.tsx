@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
+  faCheckCircle,
   faCircleInfo,
   faGear,
   faHouse,
@@ -23,6 +24,7 @@ const MainContentComponent: React.FC<{
   const sidebarRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const openButtonRef = useRef<HTMLButtonElement>(null);
+  const [isFetchingPlan, setIsFetchingPlan] = useState(false);
 
   const darkTheme = createTheme({
     palette: {
@@ -41,18 +43,22 @@ const MainContentComponent: React.FC<{
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<
-    "free" | "premium"
-  >("free");
+    "free" | "premium" | null
+  >(null); // Adjusted to handle null during initial fetch
 
   const plans = [
     {
       name: "Free",
-      price: "0$",
+      price: "0",
+      description:
+        "Perfect for getting started with basic scraping. Gain access to" +
+        " limited data points.",
       features: ["Basic scraping access", "Limited data points", "Ads"],
     },
     {
       name: "Premium",
-      price: "19.99$/month",
+      price: "19.99",
+      description: "Unlock unlimited access to powerful scraping capabilities.",
       features: [
         "Unlimited scraping access",
         "Detailed product data",
@@ -61,6 +67,33 @@ const MainContentComponent: React.FC<{
       ],
     },
   ];
+
+  const handleOpenModal = async () => {
+    setIsFetchingPlan(true); // Start loading
+    setIsModalOpen(true);
+
+    try {
+      const response = await fetch(
+        "https://localhost:8000/api/update-subscription/",
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentSubscription(data.subscription); // Update subscription state
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to fetch subscription:", errorData);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+    } finally {
+      setIsFetchingPlan(false); // End loading
+    }
+  };
 
   const handleUpgradePlan = async (plan: "free" | "premium") => {
     try {
@@ -81,7 +114,6 @@ const MainContentComponent: React.FC<{
         setCurrentSubscription(data.subscription); // Update subscription state
         setIsModalOpen(false); // Close modal after successful plan update
 
-        // Adding toastId to avoid duplicate toasts
         toast.success("Subscription updated successfully!", {
           toastId: "upgrade-success-toast", // Unique ID for success
         });
@@ -105,7 +137,9 @@ const MainContentComponent: React.FC<{
         {/* Sidebar */}
         <div
           ref={sidebarRef}
-          className={`fixed will-change-transform top-0 left-0 h-full transition-transform duration-300 ease-in-out bg-sneakers-first z-50 flex flex-col text-gray-300 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`fixed will-change-transform top-0 left-0 h-full transition-transform duration-300 ease-in-out bg-sneakers-first z-50 flex flex-col text-gray-300 ${
+            isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
           style={{ width: "16rem" }} // Fixed width for the sidebar
         >
           <ul className="[&_li]:p-4 mt-24 flex-grow flex flex-col gap-2 p-2 text-white">
@@ -134,7 +168,7 @@ const MainContentComponent: React.FC<{
             </li>
           </ul>
           <footer className="p-4 ml-2 mr-2 mb-2 hover:bg-sneakers-second rounded-xl text-white">
-            <div className="flex flex-row" onClick={() => setIsModalOpen(true)}>
+            <div className="flex flex-row" onClick={handleOpenModal}>
               <FontAwesomeIcon
                 icon={faWandMagicSparkles}
                 className="mr-2 self-center"
@@ -152,29 +186,20 @@ const MainContentComponent: React.FC<{
         {/* Main Content Area */}
         <div
           ref={contentRef}
-          className={`flex-1 transition-all duration-300 ease-in-out ${isOpen ? "ml-64" : "ml-0"}`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isOpen ? "ml-64" : "ml-0"
+          }`}
         >
-          {/* Button for opening sidebar */}
           <button
             ref={openButtonRef}
             className={`fixed top-3.5 left-3 p-2 text-white rounded z-50 transition-transform duration-300 ease-in-out`}
-            onClick={() => setIsOpen(true)}
-          >
-            <FontAwesomeIcon icon={faBars} className="text-2xl" />
-          </button>
-
-          {/* Button for closing sidebar */}
-          <button
-            ref={openButtonRef}
-            className={`fixed top-3.5 left-3 p-2 text-white rounded z-50 transition-transform duration-300 ease-in-out ${isOpen ? "" : "hidden"}`}
-            onClick={() => setIsOpen(false)}
+            onClick={() => setIsOpen((prev) => !prev)} // Toggle isOpen state
           >
             <FontAwesomeIcon icon={faBars} className="text-2xl" />
           </button>
 
           <div className="ml-14 h-full p-3.5">{children}</div>
         </div>
-        {/* Manage User Component */}
         <div className="fixed top-3.5 right-6">
           <ManageUserComponent
             sidebarRef={sidebarRef}
@@ -186,72 +211,106 @@ const MainContentComponent: React.FC<{
       {/* Plan Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-sneakers-first rounded-lg p-8 w-3/5  relative">
-            {/* Close Button in the Top Right */}
+          <div className="bg-sneakers-first rounded-lg p-8 w-3/5 relative">
             <button
               className="absolute top-2 right-2 text-white text-xl"
               onClick={() => setIsModalOpen(false)}
             >
               &times;
             </button>
-
-            <h2 className="text-xl flex justify-center font-bold">
-              Choose Your Plan
+            <h2 className="text-2xl flex justify-center font-bold">
+              Upgrade your plan
             </h2>
             <div className="flex justify-between gap-10 mt-10">
               {plans.map((plan) => (
                 <div
                   key={plan.name}
-                  className={`p-4 border rounded-lg flex justify-between flex-col cursor-pointer w-1/2 ${currentSubscription === plan.name.toLowerCase() ? "bg-sneakers-second text-white" : "hover:bg-sneakers-first"}`}
-                  onClick={() =>
-                    handleUpgradePlan(
-                      plan.name.toLowerCase() as "free" | "premium",
-                    )
-                  }
+                  className={`p-4 border rounded-lg flex justify-items-start flex-col cursor-pointer w-1/2 ${
+                    currentSubscription === plan.name.toLowerCase()
+                      ? "bg-sneakers-second text-white"
+                      : "hover:bg-sneakers-first"
+                  }`}
                 >
-                  <h3 className="text-lg font-semibold">{plan.name} Plan</h3>
-                  <p className="text-sm">{plan.price}</p>
-                  <ul className="list-disc pl-5 mt-4 text-sm">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx}>{feature}</li>
-                    ))}
-                  </ul>
-
-                  {/* Buttons based on current subscription */}
-                  {plan.name === "Free" && currentSubscription !== "free" && (
-                    <button
-                      className="mt-4 w-full bg-gray-500 text-white py-2 rounded-lg"
-                      onClick={() => handleUpgradePlan("free")}
-                    >
-                      Downgrade to Free
-                    </button>
-                  )}
-                  {plan.name === "Premium" &&
-                    currentSubscription !== "premium" && (
-                      <button
-                        className="mt-4 w-full bg-green-500 text-white py-2 rounded-lg"
-                        onClick={() => handleUpgradePlan("premium")}
-                      >
-                        Upgrade to Premium
-                      </button>
+                  <h3 className="text-lg font-semibold">
+                    {isFetchingPlan ? (
+                      <span className="blur-sm">Loading...</span>
+                    ) : (
+                      <span className="text-xl">{plan.name}</span>
                     )}
-                  {plan.name === "Free" && currentSubscription === "free" && (
+                  </h3>
+                  <p className="text-lg">
+                    {isFetchingPlan ? (
+                      <span className="blur-sm">Fetching...</span>
+                    ) : (
+                      <div className="flex flex-row">
+                        <span className="absolute text-xl text-neutral-500">
+                          $
+                        </span>
+                        <div className="flex flex-row items-center">
+                          <span className="relative pl-3 text-4xl">
+                            {plan.price}
+                          </span>
+                          <div className="flex text-sm pl-2 text-neutral-500 flex-col gap-0">
+                            <span className="absolute">USD/</span>
+                            <span className="mt-3">month</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </p>
+
+                  <div className="mt-4">{plan.description}</div>
+
+                  {/* Action button after price */}
+                  {isFetchingPlan ? (
                     <button
-                      className="mt-4 w-full bg-gray-400 text-white py-2 rounded-lg"
+                      className="mt-4 w-full bg-gray-400 py-3 rounded-3xl animate-pulse"
                       disabled
                     >
-                      It's your current plan
+                      Loading...
+                    </button>
+                  ) : plan.name.toLowerCase() === currentSubscription ? (
+                    <button
+                      className="mt-4 w-full bg-gray-400 text-white py-3 rounded-3xl"
+                      disabled
+                    >
+                      Your current plan
+                    </button>
+                  ) : (
+                    <button
+                      className={`mt-4 w-full hover:bg-green-500 py-3 rounded-3xl ${
+                        plan.name === "Free"
+                          ? "bg-gray-500 text-white"
+                          : "bg-green-400 text-white"
+                      }`}
+                      onClick={() =>
+                        handleUpgradePlan(
+                          plan.name.toLowerCase() as "free" | "premium",
+                        )
+                      }
+                    >
+                      {plan.name === "Free"
+                        ? "Downgrade"
+                        : `Upgrade to ${plan.name}`}
                     </button>
                   )}
-                  {plan.name === "Premium" &&
-                    currentSubscription === "premium" && (
-                      <button
-                        className="mt-4 w-full bg-gray-400 text-white py-2 rounded-lg"
-                        disabled
-                      >
-                        It's your current plan
-                      </button>
+
+                  {/* Features block */}
+                  <ul className="list-disc pl-5 mt-4 text-sm">
+                    {isFetchingPlan ? (
+                      <li className="blur-sm">Loading features...</li>
+                    ) : (
+                      plan.features.map((feature, idx) => (
+                        <li key={idx} className="list-none py-1">
+                          <FontAwesomeIcon
+                            icon={faCheckCircle}
+                            className="pr-3"
+                          />
+                          {feature}
+                        </li>
+                      ))
                     )}
+                  </ul>
                 </div>
               ))}
             </div>

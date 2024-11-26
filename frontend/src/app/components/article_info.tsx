@@ -6,6 +6,7 @@ import { Tooltip } from "react-tooltip";
 import DeleteProductButtonComponent from "@/app/components/delete_product";
 import Image from "next/image";
 import { animated, useTransition } from "@react-spring/web";
+import { calculateDiscount } from "../lib/utils";
 
 interface ArticleInfoComponentProps {
   shoes: Shoe[];
@@ -78,7 +79,25 @@ const ArticleInfoComponent = ({
                   id={shoe.id}
                 />
               </div>
-              <div className="text-md text-green-400">{shoe.price}$</div>
+              <div className="text-lg flex flex-row gap-2">
+                {Number(shoe.sale_price) > 0 ? (
+                  <>
+                    <p className="text-lg font-bold text-green-300 flex">
+                      ${Number(shoe.sale_price)}
+                    </p>
+                    <p className="text-lg text-gray-600 flex line-through">
+                      ${Number(shoe.price)}
+                    </p>
+                    <p className="text-lg flex">
+                      {calculateDiscount(shoe.price, shoe.sale_price)}% off
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-lg text-green-300">
+                    ${Number(shoe.price)}
+                  </p>
+                )}
+              </div>
               <div className="mt-4 w-3/4">
                 <span className="ml-2">{shoe.article} - Available sizes</span>
                 <div

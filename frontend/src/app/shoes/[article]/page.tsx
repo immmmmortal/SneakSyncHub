@@ -4,7 +4,7 @@ import { MdRefresh } from "react-icons/md";
 import React, { useEffect, useState } from "react";
 import { Shoe } from "@/app/interfaces/interfaces";
 import Link from "next/link";
-import { parseSizes } from "@/app/lib/utils";
+import { calculateDiscount, parseSizes } from "@/app/lib/utils";
 import DetailedViewLoadingComponent from "@/app/components/detailed_view_loading";
 import PriceTrendChart from "@/app/components/price_history";
 import Image from "next/image";
@@ -86,17 +86,6 @@ const ShoeDetailPage = ({ params }: ShoeDetailPageProps) => {
     }
   };
 
-  // Function to calculate percent difference
-  const calculateDiscount = (originalPrice: string, salePrice: string) => {
-    const original = parseFloat(originalPrice);
-    const sale = parseFloat(salePrice);
-
-    if (sale < original) {
-      const difference = original - sale;
-      return ((difference / original) * 100).toFixed(2); // Return percent difference
-    }
-    return "0"; // No discount
-  };
 
   if (error || !shoe) {
     return (
@@ -155,7 +144,7 @@ const ShoeDetailPage = ({ params }: ShoeDetailPageProps) => {
                     <p className="text-lg text-gray-600 flex line-through">
                       ${Number(shoe.price)}
                     </p>
-                    <p className="text-lg text-green-700 flex">
+                    <p className="text-lg text-green-300 flex">
                       {calculateDiscount(
                         shoe.price,
                         shoe.sale_price,

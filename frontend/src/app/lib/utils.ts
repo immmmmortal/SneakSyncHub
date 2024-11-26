@@ -18,13 +18,14 @@ export const getCsrfToken = () => {
         ?.split('=')[1];
 };
 
-export function safeParseSizes(sizes: string): string[] {
-    try {
-        // Replace single quotes with double quotes to make the string JSON-compatible
-        const sanitizedSizes = sizes.replace(/'/g, '"');
-        return JSON.parse(sanitizedSizes);
-    } catch {
-        // Return an empty array if parsing fails
-        return [];
+
+export const calculateDiscount = (originalPrice: string, salePrice: string) => {
+    const original = parseFloat(originalPrice);
+    const sale = parseFloat(salePrice);
+
+    if (sale < original) {
+      const difference = original - sale;
+      return ((difference / original) * 100).toFixed(2); // Return percent difference
     }
-}
+    return "0"; // No discount
+  };

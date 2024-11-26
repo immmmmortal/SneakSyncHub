@@ -9,7 +9,7 @@ import { useAuth } from "@/app/lib/auth";
 const responsive = {
   superLargeDesktop: {
     breakpoint: { max: 4000, min: 1024 },
-    items: 5,
+    items: 4,
   },
   desktop: {
     breakpoint: { max: 1024, min: 768 },
@@ -86,11 +86,11 @@ const PopularShoesCarousel = () => {
           </div>
           <h3 className="shoe-name hover:text-orange-500 transition-all p-3 text-lg font-bold text-left w-full">
             {isAuthenticated ? (
-              <Link href={`/shoes/${shoe.article}`} className="block">
+              <Link href={`/shoes/${shoe.article}`} className="block whitespace-normal break-words">
                 {shoe.name}
               </Link>
             ) : (
-              <>{shoe.name}</>
+                <><span className="whitespace-normal break-words">{shoe.name}</span></>
             )}
           </h3>
         </div>
