@@ -12,6 +12,9 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import ClearParsedArticles from "@/app/components/clear_parsed_articles";
 import MultipleSelectComponent from "@/app/components/multiple_select";
+import { Tooltip } from "react-tooltip";
+import { MdRefresh } from "react-icons/md";
+import RescrapeModalComponent from "../components/rescrape_modal_component";
 
 const SearchPage = () => {
   const [shoes, setShoes] = useState<Shoe[]>([]);
@@ -25,6 +28,7 @@ const SearchPage = () => {
     "Nike",
     "Adidas",
   ]);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage the modal visibility
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -195,6 +199,14 @@ const SearchPage = () => {
     setShoes(data);
   }, []);
 
+  const handleModalOpen = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="relative h-full">
       <div className="text-3xl font-bold">Search for articles</div>
@@ -214,8 +226,20 @@ const SearchPage = () => {
             </div>
           </div>
           <div className="flex flex-row justify-between items-center mb-2 mt-10 min-h-12">
-            <h2 className="text-xl text-gray-400">
+            <h2 className="text-xl text-gray-400 flex flex-row">
               <Link href="/search">History</Link>
+              <Tooltip id="refresh-shoe" className="z-10"/>
+              <button
+                  onClick={handleModalOpen}
+                className={`w-8 h-8 ml-2 rounded-full flex items-center justify-center ${loading ? "animate-spin" : ""}`}
+                data-tooltip-id="refresh-shoe"
+                data-tooltip-content={`This will re-scrape all fetched shoes and get updated info`}
+                disabled={loading}
+              >
+                <MdRefresh
+                  className={`w-10 h-10 ${loading ? "text-blue-500" : "text-gray-600"}`}
+                />
+              </button>
             </h2>
             <div className="">
               {isAuthenticated && shoes.length > 0 ? (
@@ -280,6 +304,13 @@ const SearchPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      <RescrapeModalComponent
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        shoes={shoes}
+      />
     </div>
   );
 };

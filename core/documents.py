@@ -18,6 +18,7 @@ class ShoeDocument(Document):
         fields = [
             'name',
             'price',
+            'sale_price',
             'url',
             'description',
             'image',
@@ -30,3 +31,4 @@ class ShoeDocument(Document):
     def prepare_id(self, instance):
         # Ensure the ID field is included
         return instance.id
+

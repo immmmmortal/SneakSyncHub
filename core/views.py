@@ -1,7 +1,7 @@
 import lorem
 from django.core.cache import cache
 from django.shortcuts import render  # type: ignore
-from elasticsearch_dsl import Q
+from elasticsearch_dsl.query import Q
 from rest_framework import generics
 from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -26,33 +26,43 @@ class ShoeSearchView(generics.ListAPIView):
         query = self.kwargs.get("query")
         min_price = self.request.query_params.get("min_price", None)
         max_price = self.request.query_params.get("max_price", None)
-        keyword = self.request.query_params.get("keyword", None)  # Can be
-        # multiple keywords
+        keyword = self.request.query_params.get(
+            "keyword", None
+        )  # Can be multiple keywords
 
-        # Initialize the base Elasticsearch query (search by name,
-        # article, sizes, parsed_from, and description)
+        # Initialize the base Elasticsearch query
         elasticsearch_query = Q(
             "multi_match",
             query=query,
             fields=["name", "description", "article", "sizes", "parsed_from"],
         )
 
-        # Apply the price range filter if specified
+        # Apply the price range filter to both `price` and `sale_price`
         if min_price or max_price:
             price_filter = {}
             if min_price:
                 price_filter["gte"] = float(min_price)
             if max_price:
                 price_filter["lte"] = float(max_price)
-            elasticsearch_query &= Q("range", price=price_filter)
 
-        # Apply the keyword filter (searching for words in the
-        # description)
+            # Ensure filtering by `sale_price` if it exists; otherwise, fall back to `price`
+            elasticsearch_query &= Q(
+                "bool",
+                should=[
+                    Q("range", sale_price=price_filter),  # Prefer sale_price
+                    Q(
+                        "bool",
+                        must_not={"exists": {"field": "sale_price"}},
+                        must=[Q("range", price=price_filter)],
+                    ),
+                ],
+                minimum_should_match=1,
+            )
+
+        # Apply the keyword filter (searching for words in the description)
         if keyword:
             keywords = keyword.split(",")  # Split the keyword parameter into a list
             keyword_queries = [Q("match", description=kw.strip()) for kw in keywords]
-            # Use 'must' instead of 'should' to enforce that all
-            # keywords must match
             elasticsearch_query &= Q("bool", must=keyword_queries)
 
         # Get the authenticated user
@@ -243,9 +253,14 @@ class SearchSuggestionView(APIView):
 class UpdateUserSubscription(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self,request):
-        return Response({"subscription":CustomUser.objects.get(
-            email=request.user.email).subscription})
+    def get(self, request):
+        return Response(
+            {
+                "subscription": CustomUser.objects.get(
+                    email=request.user.email
+                ).subscription
+            }
+        )
 
     def post(self, request):
         # Get the user profile
@@ -286,6 +301,7 @@ class ClearUserParsedArticles(APIView):
         user_profile.scraped_articles.clear()
         return Response(status=status.HTTP_200_OK)
 
+
 class ShoeDetailedView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -295,10 +311,7 @@ class ShoeDetailedView(APIView):
             serializer = ShoeSerializer(shoe)
             return Response(serializer.data)
         except Shoe.DoesNotExist:
-            return Response(
-                {"detail": "Not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
     @rate_limit
     def post(self, request, shoe_article):

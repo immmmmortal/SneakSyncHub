@@ -278,10 +278,10 @@ const MainContentComponent: React.FC<{
                     </button>
                   ) : (
                     <button
-                      className={`mt-4 w-full hover:bg-green-500 py-3 rounded-3xl ${
+                      className={`mt-4 w-full hover:bg-green-800 py-3 rounded-3xl ${
                         plan.name === "Free"
                           ? "bg-gray-500 text-white"
-                          : "bg-green-400 text-white"
+                          : "bg-sneakers-button text-white"
                       }`}
                       onClick={() =>
                         handleUpgradePlan(
