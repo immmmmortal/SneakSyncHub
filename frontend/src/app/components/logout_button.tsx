@@ -10,7 +10,7 @@ const LogoutButtonComponent = () => {
     const {setAuthenticated} = useAuth()
 
     const handleLogout = async () => {
-        const res = await fetch("https://localhost:8000/api/logout", {
+        const res = await fetch("https://localhost/api/logout", {
             method: 'POST',
             credentials: 'include',
         });

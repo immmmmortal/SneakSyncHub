@@ -114,7 +114,7 @@ const FilterSectionComponent = ({
           params.append("keyword", keywordParam);
         }
 
-        const url = `https://localhost:8000/api/search/shoes/?${params.toString()}`;
+        const url = `https://localhost/api/search/shoes/?${params.toString()}`;
 
         try {
           const response = await fetch(url, {

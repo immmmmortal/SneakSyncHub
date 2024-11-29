@@ -74,7 +74,7 @@ const MainContentComponent: React.FC<{
 
     try {
       const response = await fetch(
-        "https://localhost:8000/api/update-subscription/",
+        "https://localhost/api/update-subscription/",
         {
           method: "GET",
           credentials: "include",
@@ -98,7 +98,7 @@ const MainContentComponent: React.FC<{
   const handleUpgradePlan = async (plan: "free" | "premium") => {
     try {
       const response = await fetch(
-        "https://localhost:8000/api/update-subscription/",
+        "https://localhost/api/update-subscription/",
         {
           method: "POST",
           headers: {

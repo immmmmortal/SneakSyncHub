@@ -35,7 +35,7 @@ const PopularShoesCarousel = () => {
     const fetchPopularShoes = async () => {
       try {
         const response = await fetch(
-          "https://localhost:8000/api/trending_shoes",
+          "https://localhost/api/trending_shoes",
           {
             method: "GET",
             credentials: "include", // Include cookies or credentials in the request

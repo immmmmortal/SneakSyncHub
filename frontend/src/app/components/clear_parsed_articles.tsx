@@ -20,7 +20,7 @@ const ClearParsedArticles: React.FC<ClearParsedArticlesProps> = ({
         setLoading(true);
 
         try {
-            const response = await fetch('https://localhost:8000/api/shoes/clear', {
+            const response = await fetch('https://localhost/api/shoes/clear', {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {

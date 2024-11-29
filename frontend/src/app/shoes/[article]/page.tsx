@@ -27,7 +27,7 @@ const ShoeDetailPage = ({ params }: ShoeDetailPageProps) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://localhost:8000/api/shoes/${article}`,
+        `https://localhost/api/shoes/${article}`,
         {
           method: "GET",
           credentials: "include",
@@ -60,7 +60,7 @@ const ShoeDetailPage = ({ params }: ShoeDetailPageProps) => {
 
     try {
       const response = await fetch(
-        `https://localhost:8000/api/shoes/${article}`,
+        `https://localhost/api/shoes/${article}`,
         {
           method: "POST",
           credentials: "include",

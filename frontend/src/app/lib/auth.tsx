@@ -78,7 +78,7 @@ export const authenticate = async (
     };
 
     try {
-        const res = await fetch("https://localhost:8000/api/login", {
+        const res = await fetch("https://localhost/api/login", {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -121,7 +121,7 @@ export const signUp = async (
     };
 
     try {
-        const res = await fetch("https://localhost:8000/api/signup", {
+        const res = await fetch("https://localhost/api/signup", {
             method: 'POST',
             credentials: 'include',
             headers: {

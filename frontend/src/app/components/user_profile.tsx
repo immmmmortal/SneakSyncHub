@@ -4,7 +4,7 @@ import {cookies} from "next/headers";
 
 const ProfileComponent = async () => {
     async function getData() {
-        const res = await fetch('https://localhost:8000/api/profile', {
+        const res = await fetch('https://localhost/api/profile', {
             method: 'GET',
             credentials: 'include',
             headers: {

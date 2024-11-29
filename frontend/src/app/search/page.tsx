@@ -38,7 +38,7 @@ const SearchPage = () => {
 
     const fetchShoes = async () => {
       try {
-        const response = await fetch("https://localhost:8000/api/fetch", {
+        const response = await fetch("https://localhost/api/fetch", {
           method: "GET",
           credentials: "include",
         });
@@ -85,7 +85,7 @@ const SearchPage = () => {
     setError(null);
 
     try {
-      const response = await fetch("https://localhost:8000/api/fetch", {
+      const response = await fetch("https://localhost/api/fetch", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -155,7 +155,7 @@ const SearchPage = () => {
 
     try {
       const response = await fetch(
-        `https://localhost:8000/api/shoes/${id}/delete`,
+        `https://localhost/api/shoes/${id}/delete`,
         {
           method: "DELETE",
           credentials: "include",
@@ -181,7 +181,7 @@ const SearchPage = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const response = await fetch("https://localhost:8000/api/suggestions", {
+      const response = await fetch("https://localhost/api/suggestions", {
         credentials: "include",
         method: "GET",
       });

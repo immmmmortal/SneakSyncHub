@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import { toast } from "react-toastify";
 import { Shoe } from "../interfaces/interfaces";
@@ -6,6 +6,8 @@ import Image from "next/image";
 import Checkbox from "@mui/material/Checkbox";
 import { Tooltip } from "react-tooltip";
 import { AiOutlineInfoCircle } from "react-icons/ai";
+import { BiDotsHorizontalRounded } from "react-icons/bi";
+
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +22,7 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
   const [selectedShoes, setSelectedShoes] = useState<number[]>([]);
   const [maxSelectableShoes, setMaxSelectableShoes] = useState<number>(5); // Default for free plan
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>("free"); // Default plan is 'free'
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false); // Dropdown state
 
   // Fetch the subscription plan when the modal opens
   useEffect(() => {
@@ -27,7 +30,7 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
       const fetchSubscriptionPlan = async () => {
         try {
           const response = await fetch(
-            "https://localhost:8000/api/update-subscription/",
+            "https://localhost/api/update-subscription/",
             {
               method: "GET",
               credentials: "include",
@@ -72,10 +75,33 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
     setSelectedShoes([]);
   };
 
+  // Select the latest shoes based on the subscription plan
+  const handleSelectLatest = () => {
+    const latestShoes = shoes
+      .slice(0, maxSelectableShoes)
+      .map((shoe) => shoe.id);
+    setSelectedShoes(latestShoes);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen((prev) => !prev);
+  };
+
+  const handleOutsideClick = () => {
+    setIsDropdownOpen(false);
+  };
+
+  useEffect(() => {
+    if (isDropdownOpen) {
+      document.addEventListener("click", handleOutsideClick);
+      return () => document.removeEventListener("click", handleOutsideClick);
+    }
+  }, [isDropdownOpen]);
+
   return (
     isOpen && (
       <div className="fixed top-0 left-0 z-100 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
-        <div className="bg-sneakers-second p-6 rounded-md overflow-hidden w-3/5">
+        <div className="bg-sneakers-second p-6 rounded-md overflow-hidden w-3/5 relative">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold">Select shoes to re-scrape</h3>
             <button onClick={onClose}>
@@ -83,19 +109,61 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
             </button>
           </div>
 
-          <div className="justify-items-end pr-4 pt-4 pb-4">
-            <div className="mt-4 flex items-center">
-              <p className="ml-2 text-sm text-neutral-500">
-                {selectedShoes.length}/{maxSelectableShoes}
-              </p>
-              <Tooltip id="re-scrape-limit-info" className="z-10" />
-              <span
-                data-tooltip-id="re-scrape-limit-info"
-                data-tooltip-content={`Amount of re-scrapes depends on subscription plan. Your current subscription is: ${subscriptionPlan}`}
-                className="ml-2 text-gray-500 cursor-pointer"
-              >
-                <AiOutlineInfoCircle className="text-neutral-500 cursor-pointer" />
-              </span>
+          <div className="pt-4 pb-4 relative">
+            <div className="">
+              <div className="flex flex-row justify-between">
+                <div className="flex">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent closing on button click
+                      toggleDropdown();
+                    }}
+                    className="focus:outline-none"
+                  >
+                    <BiDotsHorizontalRounded className="text-neutral-500 cursor-pointer text-xl" />
+                  </button>
+                </div>
+                <div className="flex">
+                  <Tooltip id="re-scrape-limit-info" className="z-10" />
+                  <p className="ml-2 text-sm text-neutral-500">
+                    {selectedShoes.length}/{maxSelectableShoes}
+                  </p>
+                  <span
+                    data-tooltip-id="re-scrape-limit-info"
+                    data-tooltip-content={`Amount of re-scrapes depends on subscription plan. Your current subscription is: ${subscriptionPlan}`}
+                    className="ml-2 text-gray-500 cursor-pointer"
+                  >
+                    <AiOutlineInfoCircle className="text-neutral-500 cursor-pointer" />
+                  </span>
+                </div>
+              </div>
+              {/* Three dots for dropdown */}
+              <div className="relative ml-4">
+                {isDropdownOpen && (
+                  <div className="absolute top-[-50px] left-0 bg-sneakers-first shadow-md rounded-md w-40 z-10">
+                    <ul>
+                      <li
+                        className="px-4 py-2 hover:bg-sneakers-second cursor-pointer"
+                        onClick={() => {
+                          handleSelectLatest();
+                          toggleDropdown();
+                        }}
+                      >
+                        Select Latest
+                      </li>
+                      <li
+                        className="px-4 py-2 hover:bg-sneakers-second cursor-pointer"
+                        onClick={() => {
+                          // Placeholder for Select Favourite
+                          toggleDropdown();
+                        }}
+                      >
+                        Select Favourite
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

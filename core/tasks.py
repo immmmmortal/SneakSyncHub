@@ -1,5 +1,6 @@
-from celery import shared_task
 from datetime import date
+
+from celery import shared_task
 
 from core.models import Shoe, ShoePriceHistory
 
@@ -10,7 +11,7 @@ def update_price_history():
     shoes = Shoe.objects.all()
     for shoe in shoes:
         ShoePriceHistory.objects.create(
-            shoe=shoe,
-            price=shoe.price,
-            date_recorded=today
+            shoe=shoe, price=shoe.price, date_recorded=today
         )
+
+

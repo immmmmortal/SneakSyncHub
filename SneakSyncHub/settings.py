@@ -89,6 +89,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "SneakSyncHub.wsgi.application"
+ASGI_APPLICATION = 'SneakSyncHub.asgi.application'
+
+# settings.py
+
+
+
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -143,8 +150,29 @@ LOGGING = {
             'level': 'WARNING',  # Change to WARNING to suppress SQL logs
             'propagate': False,
         },
+        'django.utils': {  # Add this logger to suppress Django utils logs
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'elasticsearch_dsl': {  # Add this logger to suppress Elasticsearch logs
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'pandas': {  # Add this logger to suppress Pandas logs
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'jedi': {  # Add this logger to suppress Jedi logs
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
     },
 }
+
 
 LANGUAGE_CODE = "en-us"
 
