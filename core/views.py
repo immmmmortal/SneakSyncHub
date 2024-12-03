@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe, ShoesNews
-from core.utils import get_user_profile, filter_api_based_brands, scrapers_mapping
+from core.utils import get_user_profile, filter_api_based_brands, \
+    scrapers_mapping
 from members.models import UserProfile, CustomUser
 from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
 from .documents import ShoeDocument
@@ -318,89 +319,99 @@ class ShoeDetailedView(APIView):
         """
         Refresh the shoe data by scraping and updating the database.
         """
-        brand_map = {
-            "Adidas": AdidasSetup,
-            "Nike": NikeSetup,
-        }
+        new_article, error_response, status_code = ProductService.process_scraping(shoe_article, request)
 
-        # Get the user profile
-        user_profile = get_user_profile(request)
+        if new_article:
+            # Serialize and return the successful result
+            serializer = ShoeSerializer(new_article)
+            return Response(serializer.data, status=status_code)
 
-        # Get the `parse_from` field from the request or default to all available brands
-        parse_from = request.data.get("parse_from", brand_map.keys())
-
-        # Ensure the requested brand is supported
-        parse_from = [brand for brand in parse_from if brand in brand_map]
-        if not parse_from:
-            return Response(
-                {"statusText": "No valid brand found in parse_from"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        successful_scrape = None
-
-        # Try scraping the shoe for the specified article
-        for brand in parse_from:
-            setup_class = brand_map.get(brand)
-            if not setup_class:
-                continue
-            try:
-                setup_instance = setup_class(shoe_article)
-                parser = setup_instance.initialize_parser()
-                new_article, created = ProductService.get_and_save_product_data(
-                    parser, user_profile, brand
-                )
-                if new_article:
-                    successful_scrape = new_article
-                    break  # Stop after the first successful scrape
-            except Exception as e:
-                print(f"Failed scraping with {brand}: {e}")
-                continue
-
-        if successful_scrape:
-            # Update the existing shoe's information if it exists in the database
-            shoe, created = Shoe.objects.update_or_create(
-                article=successful_scrape.article,
-                defaults={
-                    "name": successful_scrape.name,
-                    "price": successful_scrape.price,
-                    "sale_price": successful_scrape.sale_price,
-                    "url": successful_scrape.url,
-                    "image": successful_scrape.image,
-                    "sizes": successful_scrape.sizes,
-                    "description": successful_scrape.description,
-                    "parsed_from": successful_scrape.parsed_from,
-                },
-            )
-            serializer = ShoeSerializer(shoe)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(
-            {"statusText": "Failed to scrape data for the article."},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # Return the error response if scraping failed
+        return Response(error_response, status=status_code)
 
 
 class FetchShoesView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [HttponlyCookieAuthentication]
 
-    def get(self, request) -> Response:
-        user_profile = get_user_profile(request)
-        scraped_articles_history = user_profile.scraped_articles.all().order_by(
-            "-created_at"
-        )
-        article_data = ShoeSerializer(scraped_articles_history, many=True)
-        return Response({"article_data": article_data.data})
+    def get_user_profile(self, request):
+        """Get the user profile from the request."""
+        return get_user_profile(request)
+
+    def get_scraped_articles(self, user_profile):
+        """Fetch scraped articles sorted by creation date."""
+        return user_profile.scraped_articles.all().order_by("-created_at")
+
+    def filter_brands(self, parse_from, brand_map):
+        """Filter the selected brands into API-based and non-API-based."""
+        api_based_brands = filter_api_based_brands(parse_from, scrapers_mapping)
+        selected_api_based_brands = [brand for brand in parse_from if
+                                     brand in api_based_brands]
+        selected_non_api_based_brands = [brand for brand in parse_from if
+                                         brand not in api_based_brands]
+        return selected_api_based_brands, selected_non_api_based_brands
+
+    def handle_existing_article(self, article, user_profile):
+        """Check if the article already exists and handle it."""
+        existing_article = Shoe.objects.filter(article=article).first()
+        if existing_article:
+            # Update the existing article's count
+            existing_article.count += 1
+            existing_article.save()
+            # Reorder the article in the user's scraped articles (move to top)
+            user_profile.scraped_articles.remove(existing_article)
+            user_profile.scraped_articles.add(existing_article)
+            serializer = ShoeSerializer(existing_article)
+            return serializer.data, status.HTTP_200_OK
+        return None, None
+
+    def scrape_brands(self, article, selected_api_based_brands,
+                      selected_non_api_based_brands, user_profile, brand_map):
+        """Scrape the shoe using API-based and non-API-based scrapers."""
+        successful_scrape = None
+
+        # Try API-based scrapers first
+        successful_scrape = self.try_scrapers(article,
+                                              selected_api_based_brands,
+                                              user_profile, brand_map)
+
+        # If no successful scrape, try non-API-based scrapers
+        if not successful_scrape:
+            successful_scrape = self.try_scrapers(article,
+                                                  selected_non_api_based_brands,
+                                                  user_profile, brand_map)
+
+        return successful_scrape
+
+    def try_scrapers(self, article, brands, user_profile, brand_map):
+        """Attempt to scrape using the given list of brands."""
+        for brand in brands:
+            setup_class = brand_map.get(brand)
+            if not setup_class:
+                continue
+            try:
+                setup_instance = setup_class(article)
+                parser = setup_instance.initialize_parser()
+                new_article, created = ProductService.get_and_save_product_data(
+                    parser, user_profile, brand)
+                if new_article:
+                    return new_article
+            except Exception as e:
+                print(f"Failed scraping with {brand}: {e}")
+                continue
+        return None
 
     @rate_limit
     def post(self, request) -> Response:
+        """
+        Fetch or scrape shoe data based on the article and selected brands.
+        """
         brand_map = {
             "Adidas": AdidasSetup,
             "Nike": NikeSetup,
         }
 
-        user_profile = get_user_profile(request)
+        user_profile = self.get_user_profile(request)
         article = request.data.get("article")
         parse_from = request.data.get("parse_from", [])
 
@@ -410,66 +421,21 @@ class FetchShoesView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Filter API-based brands
-        api_based_brands = filter_api_based_brands(parse_from, scrapers_mapping)
+        # Handle existing article scenario
+        article_data, status_code = self.handle_existing_article(article,
+                                                                 user_profile)
+        if article_data:
+            return Response(article_data, status=status_code)
 
-        # Check if article already exists
-        existing_article = Shoe.objects.filter(article=article).first()
+        # Filter selected brands into API-based and non-API-based brands
+        selected_api_based_brands, selected_non_api_based_brands = self.filter_brands(
+            parse_from, brand_map)
 
-        if existing_article:
-            # Update the existing article's count
-            existing_article.count += 1
-            existing_article.save()
-            # Reorder the article in the user's scraped articles (move to top)
-            user_profile.scraped_articles.remove(existing_article)
-            user_profile.scraped_articles.add(existing_article)
-            serializer = ShoeSerializer(existing_article)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        successful_scrape = None
-
-        # Split parse_from into API-based and non-API-based brands
-        selected_api_based_brands = [
-            brand for brand in parse_from if brand in api_based_brands
-        ]
-        selected_non_api_based_brands = [
-            brand for brand in parse_from if brand not in api_based_brands
-        ]
-
-        # Try API-based scrapers first
-        for brand in selected_api_based_brands:
-            setup_class = brand_map.get(brand)
-            if not setup_class:
-                continue
-            try:
-                setup_instance = setup_class(article)
-                parser = setup_instance.initialize_parser()
-                new_article, created = ProductService.get_and_save_product_data(
-                    parser, user_profile, brand
-                )
-                if new_article and not successful_scrape:
-                    successful_scrape = new_article
-            except Exception as e:
-                print(f"Failed scraping with {brand} (API-based): {e}")
-                continue
-
-        # Try non-API-based scrapers if no API-based success
-        if not successful_scrape:
-            for brand in selected_non_api_based_brands:
-                setup_class = brand_map.get(brand)
-                if not setup_class:
-                    continue
-                try:
-                    setup_instance = setup_class(article)
-                    parser = setup_instance.initialize_parser()
-                    new_article, created = ProductService.get_and_save_product_data(
-                        parser, user_profile, brand
-                    )
-                    if new_article and not successful_scrape:
-                        successful_scrape = new_article
-                except Exception as e:
-                    print(f"Failed scraping with {brand} (non-API-based): {e}")
-                    continue
+        # Try scraping from the selected brands
+        successful_scrape = self.scrape_brands(article,
+                                               selected_api_based_brands,
+                                               selected_non_api_based_brands,
+                                               user_profile, brand_map)
 
         if successful_scrape:
             serializer = ShoeSerializer(successful_scrape)
@@ -479,6 +445,13 @@ class FetchShoesView(APIView):
             {"statusText": "Failed to scrape data from any source"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+    def get(self, request) -> Response:
+        """Fetch the user's scraped shoe articles."""
+        user_profile = self.get_user_profile(request)
+        scraped_articles_history = self.get_scraped_articles(user_profile)
+        article_data = ShoeSerializer(scraped_articles_history, many=True)
+        return Response({"article_data": article_data.data})
 
 
 class ShoesView(APIView):

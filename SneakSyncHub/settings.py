@@ -35,11 +35,12 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -53,11 +54,21 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
-    'rest_framework.authtoken',
-    'django_extensions',
-    'SneakSyncHub',
-    'django_celery_beat',
+    "rest_framework.authtoken",
+    "django_extensions",
+    "SneakSyncHub",
+    "django_celery_beat",
+    'channels',
 ]
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(env("REDIS_HOST"), 6379)],  # Redis server location
+        },
+    },
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -89,12 +100,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "SneakSyncHub.wsgi.application"
-ASGI_APPLICATION = 'SneakSyncHub.asgi.application'
+ASGI_APPLICATION = "SneakSyncHub.asgi.application"
 
 # settings.py
-
-
-
 
 
 # Database
@@ -108,19 +116,16 @@ AUTH_USER_MODEL = "members.CustomUser"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation"
-                ".UserAttributeSimilarityValidator",
+        ".UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation"
-                ".MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation" ".MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation"
-                ".CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation" ".CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation"
-                ".NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation" ".NumericPasswordValidator",
     },
 ]
 
@@ -128,47 +133,47 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'WARNING',  # Change to WARNING to suppress SQL logs
-            'propagate': False,
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "WARNING",  # Change to WARNING to suppress SQL logs
+            "propagate": False,
         },
-        'django.utils': {  # Add this logger to suppress Django utils logs
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
+        "django.utils": {  # Add this logger to suppress Django utils logs
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
         },
-        'elasticsearch_dsl': {  # Add this logger to suppress Elasticsearch logs
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
+        "elasticsearch_dsl": {  # Add this logger to suppress Elasticsearch logs
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
         },
-        'pandas': {  # Add this logger to suppress Pandas logs
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
+        "pandas": {  # Add this logger to suppress Pandas logs
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
         },
-        'jedi': {  # Add this logger to suppress Jedi logs
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
+        "jedi": {  # Add this logger to suppress Jedi logs
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
         },
     },
 }
@@ -184,13 +189,13 @@ USE_TZ = True
 
 # settings.py
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{env("REDIS_HOST")}:6379/1',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f'redis://{env("REDIS_HOST")}:6379/1',
         # Adjust according to your Redis config
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     }
 }
 
@@ -213,8 +218,8 @@ CSRF_COOKIE_SECURE = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 RATE_LIMITS = {
-    'free': 10,
-    'premium': 20,
+    "free": 10,
+    "premium": 20,
 }
 RATE_LIMIT_WINDOW = 3600  # Time window in seconds (1 hour)
 
@@ -225,47 +230,47 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_HEADERS = (
     *default_headers,
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials',
-    'set-cookie',
-    'Set-Cookie',
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Credentials",
+    "set-cookie",
+    "Set-Cookie",
 )
 
 CORS_EXPOSE_HEADERS = [
-    'Set-Cookie',
-    'set-cookie',
+    "Set-Cookie",
+    "set-cookie",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
+CHANNELS_WS_PROTOCOLS = ["ws", "wss"]  # Allow both WebSocket protocols
+
 CSRF_TRUSTED_ORIGINS = [
-    'https://localhost:3000',
-    'http://localhost:3000',  # Add http as well
+    "https://localhost:3000",
+    "http://localhost:3000",  # Add http as well
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'core.auth.auth_utils.HttponlyCookieAuthentication',
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "core.auth.auth_utils.HttponlyCookieAuthentication",
     ),
 }
 
 SIMPLE_JWT = {
-    'AUTH_COOKIES': 'access_token',
-    'AUTH_COOKIE_SECURE': True,
-    'AUTH_COOKIE_HTTP_ONLY': True,
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    "AUTH_COOKIES": "access_token",
+    "AUTH_COOKIE_SECURE": True,
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
 }
 
 ELASTICSEARCH_DSL = {
     "default": {
         "hosts": f"https://{env('ES_HOST')}:9200",
-        "http_auth": ("elastic", env('ELASTIC_SEARCH_PASSWORD')),
-        'ca_certs': 'certificates/elastic_search/http_ca.crt',
-        'verify_certs': False,
+        "http_auth": ("elastic", env("ELASTIC_SEARCH_PASSWORD")),
+        "ca_certs": "certificates/elastic_search/http_ca.crt",
+        "verify_certs": False,
     }
 }
 
@@ -273,6 +278,6 @@ ELASTICSEARCH_DSL = {
 CELERY_BROKER_URL = f'redis://{env("CELERY_HOST")}:6379/0'  # Redis broker URL
 CELERY_RESULT_BACKEND = f'redis://{env("CELERY_HOST")}:6379/0'  # Redis
 # result backend URL
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"

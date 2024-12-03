@@ -14,6 +14,11 @@ interface SubscriptionModalProps {
   shoes: Shoe[];
 }
 
+type ScrapingRequest = {
+  article: string;
+  parse_from: string;
+};
+
 export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
   isOpen,
   onClose,
@@ -23,6 +28,58 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
   const [maxSelectableShoes, setMaxSelectableShoes] = useState<number>(5); // Default for free plan
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>("free"); // Default plan is 'free'
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false); // Dropdown state
+  const [scrapeResults, setScrapeResults] = useState<Record<string, any>>({});
+  const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const ws = new WebSocket("ws://localhost/ws/scrape/");
+
+      ws.onopen = () => {
+        console.log("WebSocket connection established");
+        setWebSocket(ws);
+      };
+
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log("Received message:", message);
+
+        // Handle scraping results
+        if (message.error) {
+          setScrapeResults((prevResults) => ({
+            ...prevResults,
+            [message.article]: { error: message.error },
+          }));
+          toast.error(
+            `Error scraping article`,
+          ); // Display error toast
+        } else {
+          setScrapeResults((prevResults) => ({
+            ...prevResults,
+            [message.article]: { data: message.data },
+          }));
+          toast.success(`Successfully scraped article ${message.article}`); // Display success toast
+        }
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket connection closed");
+        setWebSocket(null);
+      };
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        toast.error("WebSocket connection error");
+      };
+
+      return () => {
+        if (ws.readyState !== WebSocket.CLOSED) {
+          console.log("Closing WebSocket connection...");
+          ws.close();
+        }
+      };
+    }
+  }, [isOpen]);
 
   // Fetch the subscription plan when the modal opens
   useEffect(() => {
@@ -57,6 +114,44 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
       fetchSubscriptionPlan();
     }
   }, [isOpen]);
+
+  const handleSubmit = () => {
+    if (!webSocket || webSocket.readyState !== WebSocket.OPEN) {
+      toast.error("WebSocket is not ready. Please try again.");
+      return;
+    }
+
+    // Create an array to hold the scraping requests
+    const requestPayload = selectedShoes
+      .map((shoeId) => {
+        const shoe = shoes.find((s) => s.id === shoeId);
+        if (shoe) {
+          const article = shoe.article;
+          const parse_from = shoe.parsed_from;
+
+          if (!article || !parse_from) {
+            toast.error(`Missing required fields for shoe article: ${article}`);
+            return null; // Skip this shoe if required data is missing
+          }
+
+          // Return the formatted object matching the fetch payload format
+          return { article, parse_from };
+        }
+        return null; // Skip if the shoe is not found
+      })
+      .filter((item) => item !== null); // Remove any null values if data is missing
+
+    if (requestPayload.length === 0) {
+      toast.error("No valid shoes selected for scraping.");
+      return;
+    }
+
+    console.log("Sending WebSocket payload:", requestPayload); // Debugging payload
+    // Send the payload in the required format
+    webSocket.send(JSON.stringify(requestPayload));
+
+    toast.info("Scraping request sent.");
+  };
 
   const handleCheckboxChange = (shoeId: number) => {
     setSelectedShoes((prev) => {
@@ -100,7 +195,7 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
 
   return (
     isOpen && (
-      <div className="fixed top-0 left-0 z-100 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
+      <div className="fixed z-10 top-0 left-0 z-100 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
         <div className="bg-sneakers-second p-6 rounded-md overflow-hidden w-3/5 relative">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold">Select shoes to re-scrape</h3>
@@ -208,6 +303,23 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
             ))}
           </div>
 
+          {/* Scraping Status and Results */}
+          <div>
+            <h4 className="mt-4">Scrape Results:</h4>
+            <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-sneakers-first scrollbar-rounded-md">
+              {Object.entries(scrapeResults).map(([article, result]) => (
+                <div key={article} className="mb-4">
+                  <p className="font-bold">Article: {article}</p>
+                  {result.error ? (
+                    <p className="text-red-500">Error: {result.error}</p>
+                  ) : (
+                    <pre>{JSON.stringify(result.data, null, 2)}</pre>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Sticky submit button */}
           <div className="flex justify-between mt-4">
             <button
@@ -220,6 +332,7 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
             <button
               className="mt-4 bg-sneakers-button hover:cursor-pointer justify-center text-white w-1/6 py-2 rounded-md flex"
               disabled={selectedShoes.length === 0}
+              onClick={handleSubmit}
             >
               <div className="flex items-center">Submit</div>
             </button>
