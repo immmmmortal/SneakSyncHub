@@ -187,7 +187,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-# settings.py
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -211,7 +210,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
-
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
@@ -224,8 +222,10 @@ RATE_LIMITS = {
 RATE_LIMIT_WINDOW = 3600  # Time window in seconds (1 hour)
 
 CORS_ALLOWED_ORIGINS = [
-    "https://localhost",
+    "http://localhost:3000",
     "https://localhost:3000",
+    "http://localhost:8000",
+    "https://localhost:8000",
 ]
 
 CORS_ALLOW_HEADERS = (
@@ -249,6 +249,7 @@ CHANNELS_WS_PROTOCOLS = ["ws", "wss"]  # Allow both WebSocket protocols
 CSRF_TRUSTED_ORIGINS = [
     "https://localhost:3000",
     "http://localhost:3000",  # Add http as well
+    "https://localhost",
 ]
 
 REST_FRAMEWORK = {

@@ -23,7 +23,7 @@ export default function RootLayout({
       <body className="bg-sneakers-second h-full w-full fixed">
         <AuthProvider>
           <MainContentComponent>
-            <ToastContainer position="bottom-right" theme="dark" limit={1} />
+            <ToastContainer position="bottom-right" theme="dark" />
             {children}
           </MainContentComponent>
         </AuthProvider>
