@@ -15,7 +15,7 @@ services:
       - es
       - selenium
     networks:
-      - backend
+      - main_network
 
   frontend:
     build:
@@ -25,7 +25,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - backend
+      - main_network
 
   nginx:
     image: nginx:latest
@@ -40,7 +40,7 @@ services:
     depends_on:
       - backend
     networks:
-      - backend
+      - main_network
 
   db:
     image: postgres:15
@@ -52,7 +52,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - backend
+      - main_network
 
   es:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
@@ -63,7 +63,7 @@ services:
     ports:
       - "9200:9200"
     networks:
-      - backend
+      - main_network
 
   selenium:
     container_name: selenium
@@ -71,7 +71,7 @@ services:
     ports:
       - "4444:4444"
     networks:
-      - backend
+      - main_network
     environment:
       - SE_VNC_NO_PASSWORD=true
     privileged: true
@@ -84,7 +84,21 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - backend
+      - main_network
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    container_name: bot
+    volumes:
+      - ./core/telegram_bot:/app/core/telegram_bot
+    env_file:
+      - .env.docker
+    depends_on:
+      - redis
+    networks:
+      - main_network
 
   celery:
     build:
@@ -97,7 +111,7 @@ services:
     depends_on:
       - redis
     networks:
-      - backend
+      - main_network
 
   celery-beat:
     build:
@@ -110,7 +124,7 @@ services:
     depends_on:
       - redis
     networks:
-      - backend
+      - main_network
 
   flower:
     image: mher/flower:latest
@@ -121,12 +135,12 @@ services:
     depends_on:
       - redis
     networks:
-      - backend
+      - main_network
 
 volumes:
   postgres_data:
   elasticsearch_data:
 
 networks:
-  backend:
+  main_network:
 

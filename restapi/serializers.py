@@ -2,13 +2,13 @@ from rest_framework import serializers
 
 import core.models  # noqa: F401
 from core.models import Shoe, ShoePriceHistory, ShoesNews
-from members.models import CustomUser
+from members.models import CustomUser, UserProfile
 
 
 class ShoePriceHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoePriceHistory
-        fields = ['price', 'date_recorded']
+        fields = ["price", "date_recorded"]
 
 
 class ShoeSerializer(serializers.ModelSerializer):
@@ -16,13 +16,13 @@ class ShoeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Shoe
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ShoesNewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoesNews
-        fields = '__all__'
+        fields = "__all__"
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -33,3 +33,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return CustomUser.objects.create_user(**validated_data)
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = "__all__"

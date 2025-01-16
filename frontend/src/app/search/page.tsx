@@ -51,6 +51,7 @@ const SearchPage = () => {
             );
             return; // Skip further processing if rate limit is exceeded
           }
+
           setError(`HTTP error! Status: ${response.status}`);
           toast.error(response.statusText);
           return;
@@ -154,13 +155,10 @@ const SearchPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://localhost/api/shoes/${id}/delete`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
+      const response = await fetch(`https://localhost/api/shoes/${id}/delete`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       if (response.ok) {
         setShoes((prevShoes) => prevShoes.filter((shoe) => shoe.id !== id));
@@ -218,7 +216,7 @@ const SearchPage = () => {
                 fetchSuggestions={fetchSuggestions}
                 is_article_loading={loading}
                 width={""}
-                placeholder={"Search article*"}
+                placeholder={"Search article"}
                 onSearch={handleSearch}
                 is_disabled={!isAuthenticated} // Pass the search handler
               />
@@ -228,9 +226,9 @@ const SearchPage = () => {
           <div className="flex flex-row justify-between items-center mb-2 mt-10 min-h-12">
             <h2 className="text-xl text-gray-400 flex flex-row">
               <Link href="/search">History</Link>
-              <Tooltip id="refresh-shoe" className="z-10"/>
+              <Tooltip id="refresh-shoe" className="z-10" />
               <button
-                  onClick={handleModalOpen}
+                onClick={handleModalOpen}
                 className={`w-8 h-8 ml-2 rounded-full flex items-center justify-center ${loading ? "animate-spin" : ""}`}
                 data-tooltip-id="refresh-shoe"
                 data-tooltip-content={`This will re-scrape all fetched shoes and get updated info`}

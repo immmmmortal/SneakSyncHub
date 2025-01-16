@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/swiper": "^6.0.0",
+    "autoprefixer": "^10.4.20",
     "tailwind-scrollbar": "^3.1.0"
   }
 }

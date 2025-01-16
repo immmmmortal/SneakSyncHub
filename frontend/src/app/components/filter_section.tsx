@@ -137,7 +137,7 @@ const FilterSectionComponent = ({
 
       fetchShoes();
     }
-  }, [value, hasInteracted, selectedKeywords]);
+  }, [value, hasInteracted, selectedKeywords, onDataFetched]);
 
   return (
     <div className="bg-sneakers-first h-full rounded-2xl min-w-48 p-3 max-w-52 w-56">

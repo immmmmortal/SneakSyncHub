@@ -7,6 +7,8 @@ import MainContentComponent from "@/app/components/main_content";
 import "react-tooltip/dist/react-tooltip.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import Modal from "@/app/modal";
+
 
 export const metadata: Metadata = {
   title: "SneakSyncHub",
@@ -25,6 +27,7 @@ export default function RootLayout({
           <MainContentComponent>
             <ToastContainer position="bottom-right" theme="dark" />
             {children}
+            <Modal/>
           </MainContentComponent>
         </AuthProvider>
       </body>

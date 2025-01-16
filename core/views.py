@@ -1,5 +1,9 @@
+import random
+import time
+
 import lorem
 from django.core.cache import cache
+from django.http import JsonResponse
 from django.shortcuts import render  # type: ignore
 from elasticsearch_dsl.query import Q
 from rest_framework import generics
@@ -7,13 +11,18 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from telegram import Bot
 
+from SneakSyncHub import settings
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe, ShoesNews
-from core.utils import get_user_profile, filter_api_based_brands, \
-    scrapers_mapping
+from core.utils import get_user_profile, filter_api_based_brands, scrapers_mapping
 from members.models import UserProfile, CustomUser
-from restapi.serializers import ShoeSerializer, ShoesNewsSerializer
+from restapi.serializers import (
+    ShoeSerializer,
+    ShoesNewsSerializer,
+    UserProfileSerializer,
+)
 from .documents import ShoeDocument
 from .redis_utils.rate_limiter import rate_limit
 from .scraping.product_service import ProductService, NikeSetup, AdidasSetup
@@ -319,7 +328,9 @@ class ShoeDetailedView(APIView):
         """
         Refresh the shoe data by scraping and updating the database.
         """
-        new_article, error_response, status_code = ProductService.process_scraping(shoe_article, request)
+        new_article, error_response, status_code = ProductService.process_scraping(
+            shoe_article, request
+        )
 
         if new_article:
             # Serialize and return the successful result
@@ -345,10 +356,12 @@ class FetchShoesView(APIView):
     def filter_brands(self, parse_from, brand_map):
         """Filter the selected brands into API-based and non-API-based."""
         api_based_brands = filter_api_based_brands(parse_from, scrapers_mapping)
-        selected_api_based_brands = [brand for brand in parse_from if
-                                     brand in api_based_brands]
-        selected_non_api_based_brands = [brand for brand in parse_from if
-                                         brand not in api_based_brands]
+        selected_api_based_brands = [
+            brand for brand in parse_from if brand in api_based_brands
+        ]
+        selected_non_api_based_brands = [
+            brand for brand in parse_from if brand not in api_based_brands
+        ]
         return selected_api_based_brands, selected_non_api_based_brands
 
     def handle_existing_article(self, article, user_profile):
@@ -365,21 +378,27 @@ class FetchShoesView(APIView):
             return serializer.data, status.HTTP_200_OK
         return None, None
 
-    def scrape_brands(self, article, selected_api_based_brands,
-                      selected_non_api_based_brands, user_profile, brand_map):
+    def scrape_brands(
+        self,
+        article,
+        selected_api_based_brands,
+        selected_non_api_based_brands,
+        user_profile,
+        brand_map,
+    ):
         """Scrape the shoe using API-based and non-API-based scrapers."""
         successful_scrape = None
 
         # Try API-based scrapers first
-        successful_scrape = self.try_scrapers(article,
-                                              selected_api_based_brands,
-                                              user_profile, brand_map)
+        successful_scrape = self.try_scrapers(
+            article, selected_api_based_brands, user_profile, brand_map
+        )
 
         # If no successful scrape, try non-API-based scrapers
         if not successful_scrape:
-            successful_scrape = self.try_scrapers(article,
-                                                  selected_non_api_based_brands,
-                                                  user_profile, brand_map)
+            successful_scrape = self.try_scrapers(
+                article, selected_non_api_based_brands, user_profile, brand_map
+            )
 
         return successful_scrape
 
@@ -393,7 +412,8 @@ class FetchShoesView(APIView):
                 setup_instance = setup_class(article)
                 parser = setup_instance.initialize_parser()
                 new_article, created = ProductService.get_and_save_product_data(
-                    parser, user_profile, brand)
+                    parser, user_profile, brand
+                )
                 if new_article:
                     return new_article
             except Exception as e:
@@ -422,20 +442,23 @@ class FetchShoesView(APIView):
             )
 
         # Handle existing article scenario
-        article_data, status_code = self.handle_existing_article(article,
-                                                                 user_profile)
+        article_data, status_code = self.handle_existing_article(article, user_profile)
         if article_data:
             return Response(article_data, status=status_code)
 
         # Filter selected brands into API-based and non-API-based brands
         selected_api_based_brands, selected_non_api_based_brands = self.filter_brands(
-            parse_from, brand_map)
+            parse_from, brand_map
+        )
 
         # Try scraping from the selected brands
-        successful_scrape = self.scrape_brands(article,
-                                               selected_api_based_brands,
-                                               selected_non_api_based_brands,
-                                               user_profile, brand_map)
+        successful_scrape = self.scrape_brands(
+            article,
+            selected_api_based_brands,
+            selected_non_api_based_brands,
+            user_profile,
+            brand_map,
+        )
 
         if successful_scrape:
             serializer = ShoeSerializer(successful_scrape)
@@ -469,3 +492,33 @@ class DeleteShoeView(APIView):
     def delete(self, request, shoe_id):
         Shoe.objects.get(id=shoe_id).delete()
         return Response(status=status.HTTP_200_OK)
+
+
+class VerifyTelegramCodeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        received_code = request.data.get("code")
+
+        if not received_code:
+            return JsonResponse({"error": "Code is required."}, status=400)
+
+        # Retrieve the username associated with the received code
+        telegram_username = cache.get(f"verification_code_{received_code}")
+
+        if not telegram_username:
+            return JsonResponse({"error": "Invalid or expired code."}, status=400)
+
+        try:
+            user_profile = get_user_profile(request)
+            user_profile.telegram_username = telegram_username
+            user_profile.save()
+
+            # Clear the cache for the used code
+            cache.delete(f"verification_code_{received_code}")
+
+            return JsonResponse(
+                {"success": "Telegram account linked successfully."}, status=200
+            )
+        except UserProfile.DoesNotExist:
+            return JsonResponse({"error": "User profile not found."}, status=404)

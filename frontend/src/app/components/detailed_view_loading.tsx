@@ -42,7 +42,7 @@ const DetailedViewLoadingComponent = () => {
                     <div>
                         <div>
                             <p className="mt-5 text-lg font-bold">Shipping</p>
-                            You'll see shipping options at checkout.
+                            You&apos;ll see shipping options at checkout.
                         </div>
                         <div className="mt-10">
                             <p className="text-lg font-bold">Free Pickup</p>

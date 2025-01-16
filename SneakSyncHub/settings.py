@@ -31,7 +31,7 @@ environ.environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
-
+BOT_TOKEN = env("BOT_TOKEN")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
@@ -58,13 +58,13 @@ INSTALLED_APPS = [
     "django_extensions",
     "SneakSyncHub",
     "django_celery_beat",
-    'channels',
+    "channels",
 ]
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
             "hosts": [(env("REDIS_HOST"), 6379)],  # Redis server location
         },
     },
@@ -72,8 +72,8 @@ CHANNEL_LAYERS = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -222,6 +222,8 @@ RATE_LIMITS = {
 RATE_LIMIT_WINDOW = 3600  # Time window in seconds (1 hour)
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "https://localhost",
     "http://localhost:3000",
     "https://localhost:3000",
     "http://localhost:8000",

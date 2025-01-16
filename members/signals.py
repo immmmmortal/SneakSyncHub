@@ -3,7 +3,6 @@ from django.db.models.signals import m2m_changed
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
-
 from .models import CustomUser
 from .models import UserProfile, Shoe
 
@@ -35,3 +34,4 @@ def add_article_to_user_profile(sender, instance, created, **kwargs):
         'user_profile')  # Get the user_profile from kwargs
     if created and user_profile:
         user_profile.scraped_articles.add(instance)
+
