@@ -522,3 +522,13 @@ class VerifyTelegramCodeAPIView(APIView):
             )
         except UserProfile.DoesNotExist:
             return JsonResponse({"error": "User profile not found."}, status=404)
+
+
+class UnlinkTelegramView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user_profile = get_user_profile(request)
+        user_profile.telegram_username = None
+        user_profile.save()
+        return Response({"message": "Telegram unlinked " "successfully."}, status=200)

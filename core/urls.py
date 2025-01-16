@@ -5,6 +5,7 @@ from core import views
 from core.views import (
     UpdateUserSubscription,
     VerifyTelegramCodeAPIView,
+    UnlinkTelegramView,
 )
 
 router = routers.DefaultRouter()
@@ -28,6 +29,6 @@ urlpatterns = [
     path(
         "verify_telegram_code/",
         VerifyTelegramCodeAPIView.as_view(),
-        name="verify-telegram-code",
     ),
+    path("unlink_telegram", UnlinkTelegramView.as_view()),
 ]

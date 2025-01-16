@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -7,78 +7,73 @@ import LogoutButtonComponent from "@/app/components/logout_button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBrush,
-  faCheck,
   faGear,
   faLink,
   faPaperPlane,
   faUser,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { ClickOutsideRefInterface } from "@/app/interfaces/interfaces";
 import { MdClose } from "react-icons/md";
-import { Tooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
-import {router} from "next/client";
+import { router } from "next/client";
+import { useRouter } from "next/navigation";
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
 }) => {
-  const [telegramUsername, setTelegramUsername] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState<string | null>(null);
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const router = useRouter();
 
-  const openTelegramModal = () => {
-    setIsTelegramModalOpen(true);
-  };
-
-  const closeTelegramModal = () => {
-    setIsTelegramModalOpen(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTelegramUsername(e.target.value);
-    setStatus("idle"); // Reset status when input changes
-    setErrorMessage(null); // Clear any previous errors
-  };
-
-  const handleSendTelegramUsername = async () => {
-    if (!telegramUsername.trim()) {
-      setErrorMessage("Please enter your Telegram username.");
-      return;
-    }
-
-    setStatus("loading");
-    setErrorMessage(null); // Reset errors during loading
-
+  const fetchUserProfile = async () => {
     try {
-      const response = await fetch("https://localhost/api/link_telegram/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await fetch("https://localhost/api/profile", {
+        method: "GET",
         credentials: "include",
-        body: JSON.stringify({ telegram_username: telegramUsername }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTelegramUsername(data.telegram_username || null);
+      } else {
+        console.error("Failed to fetch user profile.");
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
+
+  const handleUnpairTelegram = async () => {
+    try {
+      const response = await fetch("https://localhost/api/unlink_telegram", {
+        method: "POST",
+        credentials: "include",
       });
 
       if (response.ok) {
+        setTelegramUsername(null);
         setStatus("success");
-        const data = await response.json();
-        console.log("Response:", data);
       } else {
         setStatus("error");
         const errorData = await response.json();
-        setErrorMessage(errorData.error || "An unknown error occurred.");
+        setErrorMessage(
+          errorData.error || "Failed to unpair Telegram account.",
+        );
       }
     } catch (error) {
-      setStatus("error");
-      setErrorMessage("Failed to connect to the server. Please try again.");
-      console.error("Error linking Telegram account:", error);
+      console.error("Error unlinking Telegram account:", error);
+      setErrorMessage("An unknown error occurred.");
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUserProfile();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -106,28 +101,41 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             </ul>
           </div>
           <div className="flex w-full items-start">
-            <div className="flex flex-row items-center">
-              <div className="flex flex-row gap-8">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-row gap-2">
-                    <div>
-                      <FontAwesomeIcon
-                        icon={faPaperPlane}
-                        className="text-blue-500 text-xl"
-                      />
-                    </div>
-                    <div>
-                      <h2>Telegram</h2>
-                    </div>
+            <div className="flex flex-row gap-8 justify-between w-full">
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-row gap-2">
+                  <div>
+                    <FontAwesomeIcon
+                      icon={faPaperPlane}
+                      className="text-blue-500 text-xl"
+                    />
                   </div>
                   <div>
-                    <h1 className="text-neutral-400 text-sm">
-                      Link your telegram to receive news, sales info about
-                      shoes.
-                    </h1>
+                    <h2>Telegram</h2>
                   </div>
                 </div>
-                <div className="flex items-center">
+                <div>
+                  <h1 className="text-neutral-400 text-sm">
+                    {telegramUsername ? (
+                      <span>Your account is linked: @{telegramUsername}</span>
+                    ) : (
+                      <span>
+                        Link your telegram to receive news, sales info about
+                        shoes.
+                      </span>
+                    )}
+                  </h1>
+                </div>
+              </div>
+              <div className="flex items-center">
+                {telegramUsername ? (
+                  <button
+                    onClick={handleUnpairTelegram}
+                    className="hover:bg-red-500 p-2 rounded-2xl font-medium text-neutral-300"
+                  >
+                    Unpair
+                  </button>
+                ) : (
                   <button
                     onClick={() => {
                       const params = new URLSearchParams(
@@ -140,7 +148,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   >
                     Connect
                   </button>
-                </div>
+                )}
               </div>
             </div>
           </div>
