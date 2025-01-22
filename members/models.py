@@ -93,9 +93,6 @@ class ShoeNotificationPreference(models.Model):
     desired_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
-    desired_discount_percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True
-    )
 
     class Meta:
         unique_together = (
@@ -104,4 +101,4 @@ class ShoeNotificationPreference(models.Model):
         )  # Ensure a user can only set preferences for a shoe once
 
     def __str__(self):
-        return f"Preference for {self.shoe.name} by {self.user.username}"
+        return f"Preference for {self.shoe.name} by " f"{self.user.email}"

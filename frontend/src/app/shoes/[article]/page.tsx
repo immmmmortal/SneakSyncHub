@@ -1,7 +1,7 @@
 "use client";
 
 import { MdRefresh } from "react-icons/md";
-import React, { useEffect, useState } from "react";
+import React, {useCallback, useEffect, useState } from "react";
 import { Shoe } from "@/app/interfaces/interfaces";
 import Link from "next/link";
 import { calculateDiscount, parseSizes } from "@/app/lib/utils";
@@ -23,7 +23,7 @@ const ShoeDetailPage = ({ params }: ShoeDetailPageProps) => {
   const [error, setError] = useState<boolean>(false);
   const { v4: uuidv4 } = require("uuid");
 
-  const fetchShoeByArticle = async () => {
+  const fetchShoeByArticle = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(
@@ -46,7 +46,7 @@ const ShoeDetailPage = ({ params }: ShoeDetailPageProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [article]);
 
   useEffect(() => {
     fetchShoeByArticle();

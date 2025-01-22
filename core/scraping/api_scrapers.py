@@ -9,8 +9,15 @@ from core.scraping.selenium_scrapers import ProductData
 
 class APIClient:
     def get(self, url: str) -> Dict:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Connection": "keep-alive",
+            "Referer": "https://www.adidas.com/",
+        }
         try:
-            response = cureq.get(url, impersonate="chrome")
+            response = cureq.get(url, headers=headers, impersonate="chrome")
             # Check if the status code indicates success
             if response.status_code == 200:
                 try:
@@ -45,8 +52,7 @@ class AdidasProductScraper(ScraperBase):
     def __init__(self, article: str, api_client: APIClient):
         self._api_client = api_client
         self._article = article
-        self._search_url = self.__SEARCH_URL_TEMPLATE.format(
-            article=self._article)
+        self._search_url = self.__SEARCH_URL_TEMPLATE.format(article=self._article)
 
     def fetch_product_info(self) -> Dict:
         return self._api_client.get(self._search_url)
@@ -84,8 +90,7 @@ class AdidasProductParser:
             available_sizes = self.__format_product_sizes(self._product_sizes)
             __product_data: ProductData = {
                 "article": self._product_info.get("id", ""),
-                "url": self._product_info.get("meta_data", {}).get("canonical",
-                                                                   ""),
+                "url": self._product_info.get("meta_data", {}).get("canonical", ""),
                 "name": self._product_info.get("name", ""),
                 "price": self._product_info.get("pricing_information", {}).get(
                     "standard_price", ""
@@ -94,8 +99,7 @@ class AdidasProductParser:
                     "sale_price", ""
                 ),
                 "sizes": available_sizes,
-                "description": self._product_info.get("product_description",
-                                                      {}).get(
+                "description": self._product_info.get("product_description", {}).get(
                     "text", ""
                 ),
                 "image": self._product_info.get("view_list", [{}])[0].get(

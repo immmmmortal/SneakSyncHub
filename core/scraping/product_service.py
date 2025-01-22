@@ -1,5 +1,6 @@
 import asyncio
 from decimal import Decimal
+from typing import Tuple, Optional
 
 from rest_framework import status
 
@@ -26,8 +27,7 @@ class NikeSetup:
 
     def initialize_parser(self) -> NikeProductParser:
         return NikeProductParser(
-            article=self.article, driver=self.web_driver,
-            product_page=self.product_page
+            article=self.article, driver=self.web_driver, product_page=self.product_page
         )
 
 
@@ -69,8 +69,9 @@ class ProductService:
         user_profile = get_user_profile(request)
 
         # Get the `parse_from` field from the request or default to all available brands
-        parse_from = request.data.get("parse_from", list(
-            brand_map.keys()))  # Convert dict_keys to a list
+        parse_from = request.data.get(
+            "parse_from", list(brand_map.keys())
+        )  # Convert dict_keys to a list
 
         # Ensure parse_from is always a list, even if it's a single string
         if isinstance(parse_from, str):
@@ -80,8 +81,11 @@ class ProductService:
         parse_from = [brand for brand in parse_from if brand in brand_map]
 
         if not parse_from:
-            return None, {
-                "statusText": "No valid brand found in parse_from"}, status.HTTP_400_BAD_REQUEST
+            return (
+                None,
+                {"statusText": "No valid brand found in parse_from"},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         # Try scraping the shoe for the specified article
         for brand in parse_from:
@@ -94,17 +98,36 @@ class ProductService:
                 new_article, created = ProductService.get_and_save_product_data(
                     parser, user_profile, brand
                 )
+
                 if new_article:
+                    if new_article.article != shoe_article:
+                        error_message = (
+                            f"The shoe article '{shoe_article}' does not match the fetched article "
+                            f"'{new_article.article}' from {brand}. We "
+                            f"couldn't "
+                            f"find this shoe on the original "
+                            f"site, and attempts to scrape from other sites also failed."
+                        )
+                        return (
+                            None,
+                            {"statusText": error_message},
+                            status.HTTP_404_NOT_FOUND,
+                        )
                     return new_article, None, status.HTTP_200_OK
             except Exception as e:
                 print(f"Failed scraping with {brand}: {e}")
                 continue
 
-        return None, {
-            "statusText": "Failed to scrape data for the article."}, status.HTTP_500_INTERNAL_SERVER_ERROR
+        return (
+            None,
+            {"statusText": "Failed to scrape data for the article."},
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     @staticmethod
-    def get_and_save_product_data(parser, user_profile, parse_from):
+    def get_and_save_product_data(
+        parser, user_profile, parse_from
+    ) -> Tuple[Optional[Shoe], bool]:
         """
         Extract product data using the parser and save it to the database.
         """
@@ -114,7 +137,9 @@ class ProductService:
             product_data["parsed_from"] = parse_from  # Set parsed_from field
 
             sale_price = (
-                Decimal(product_data["sale_price"]) if product_data["sale_price"] else None
+                Decimal(product_data["sale_price"])
+                if product_data["sale_price"]
+                else None
             )
             price = Decimal(product_data["price"]) if product_data["price"] else None
 
@@ -143,4 +168,3 @@ class ProductService:
             print(f"Error with scraper {parse_from}: {e}")
             # Skip this scraper and move to the next
             return None, False
-

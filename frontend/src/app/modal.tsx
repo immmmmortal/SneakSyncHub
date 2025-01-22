@@ -84,7 +84,9 @@ const TelegramModal: React.FC = () => {
             id="telegram"
             value={code}
             onChange={handleInputChange}
-            className="px-3 w-2/3 py-2 bg-sneakers-first border-b-2 focus:outline-none autofill:shadow-none autofill:bg-inherit autofill:text-inherit"
+            className="px-3 w-2/3 py-2 bg-sneakers-first
+             border-b-2 focus:outline-none autofill:shadow-none autofill:bg-inherit
+              autofill:text-inherit"
             placeholder="Insert code"
           />
           {errorMessage && status === "error" && (

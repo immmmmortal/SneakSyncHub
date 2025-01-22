@@ -1,27 +1,22 @@
-import random
-import time
-
 import lorem
 from django.core.cache import cache
 from django.http import JsonResponse
-from django.shortcuts import render  # type: ignore
+from django.shortcuts import render, get_object_or_404  # type: ignore
 from elasticsearch_dsl.query import Q
 from rest_framework import generics
 from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from telegram import Bot
 
-from SneakSyncHub import settings
 from core.auth.auth_utils import HttponlyCookieAuthentication
 from core.models import Shoe, ShoesNews
 from core.utils import get_user_profile, filter_api_based_brands, scrapers_mapping
-from members.models import UserProfile, CustomUser
+from members.models import UserProfile, CustomUser, ShoeNotificationPreference
 from restapi.serializers import (
     ShoeSerializer,
     ShoesNewsSerializer,
-    UserProfileSerializer,
+    ShoeNotificationPreferenceSerializer,
 )
 from .documents import ShoeDocument
 from .redis_utils.rate_limiter import rate_limit
@@ -532,3 +527,26 @@ class UnlinkTelegramView(APIView):
         user_profile.telegram_username = None
         user_profile.save()
         return Response({"message": "Telegram unlinked " "successfully."}, status=200)
+
+
+class CreateNotificationPreference(APIView):
+    def post(self, request, *args, **kwargs):
+
+        price = request.data.get("price")
+        shoe_article = request.data.get("shoe_article")
+        user = get_user_profile(request)
+
+        shoe = get_object_or_404(Shoe, article=shoe_article)
+
+        preference, created = ShoeNotificationPreference.objects.get_or_create(
+            user=user, shoe=shoe, defaults={"desired_price": price}
+        )
+
+        if not created:
+            preference.desired_price = price
+            preference.save()
+
+        return Response(
+            ShoeNotificationPreferenceSerializer(preference).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )

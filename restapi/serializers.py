@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 import core.models  # noqa: F401
 from core.models import Shoe, ShoePriceHistory, ShoesNews
-from members.models import CustomUser, UserProfile
+from members.models import CustomUser, UserProfile, ShoeNotificationPreference
 
 
 class ShoePriceHistorySerializer(serializers.ModelSerializer):
@@ -38,4 +38,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
+        fields = "__all__"
+
+
+class ShoeNotificationPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoeNotificationPreference
         fields = "__all__"
