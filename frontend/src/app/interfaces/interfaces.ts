@@ -45,3 +45,8 @@ export interface NumericInputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; // Change handler
   isDisabled?: boolean;
 }
+
+export interface DesiredPrice {
+  shoe: Shoe;
+  desired_price: string;
+}

@@ -42,61 +42,65 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      const ws = new WebSocket("ws://localhost/ws/scrape/");
+      const ws = new WebSocket("ws://localhost:8000/ws/scrape/");
 
       ws.onopen = () => {
         console.log("WebSocket connection established");
         setWebSocket(ws);
       };
 
-      // Inside the useEffect where you're handling the WebSocket message:
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
         console.log("Received message:", message);
 
         const article: string = message.article;
 
-        // Check if the article is one of the selected shoes
         setSelectedShoesState((prevState) => {
           const updatedState = { ...prevState };
+          if (!updatedState[article]) {
+            updatedState[article] = {
+              error: false,
+              // @ts-ignore
+              shoe: shoes.find((s) => s.article === article), // Find the shoe object
+              isLoading: false,
+              isSuccess: false,
+            };
+          }
 
-          const shoeIndex = selectedShoes.findIndex(
-            (shoe) => shoe.article === article,
-          );
+          if (message.status === "error") {
+            updatedState[article] = {
+              ...updatedState[article],
+              isLoading: false,
+              isSuccess: false,
+              error: true, // Explicitly set error to true
+            };
 
-          if (shoeIndex >= 0) {
-            if (message.status === "error") {
-              updatedState[article] = {
-                ...updatedState[article],
-                isLoading: false,
-                isSuccess: false,
-                error: true,
-              };
+            setScrapeResults((prevResults) => ({
+              ...prevResults,
+              [article]: { error: message.error },
+            }));
 
-              setScrapeResults((prevResults) => ({
-                ...prevResults,
-                [article]: { error: message.error },
-              }));
-
-              // Prevent duplicate error toasts
-              const toastId = `error-${article}`;
-              if (!toast.isActive(toastId)) {
-                toast.error(`Error scraping article ${article}`, {
-                  toastId, // Assign a unique ID for the toast
-                });
-              }
-            } else if (message.status === "success") {
-              updatedState[article] = {
-                ...updatedState[article],
-                isLoading: false,
-                isSuccess: true,
-              };
-
-              setScrapeResults((prevResults) => ({
-                ...prevResults,
-                [article]: { data: message.data },
-              }));
+            const toastId = `error-${article}`;
+            if (!toast.isActive(toastId)) {
+              toast.error(
+                `Error scraping article ${article}: ${message.error}`,
+                {
+                  toastId,
+                },
+              );
             }
+          } else if (message.status === "success") {
+            updatedState[article] = {
+              ...updatedState[article],
+              isLoading: false,
+              isSuccess: true,
+              error: false, // Explicitly clear the error
+            };
+
+            setScrapeResults((prevResults) => ({
+              ...prevResults,
+              [article]: { data: message.data },
+            }));
           }
 
           return updatedState;
@@ -120,7 +124,7 @@ export const RescrapeModalComponent: React.FC<SubscriptionModalProps> = ({
         }
       };
     }
-  }, [isOpen, selectedShoes]);
+  }, [isOpen]); // WebSocket only depends on `isOpen`
 
   // Fetch the subscription plan when the modal opens
   useEffect(() => {

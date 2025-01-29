@@ -67,6 +67,12 @@ class ProductService:
 
         # Get the user profile
         user_profile = get_user_profile(request)
+        if not user_profile:
+            raise ValueError("User profile could not be retrieved.")
+
+        print(f"Processing article: {shoe_article}")
+        print(f"User ID: {request.user.id if request.user else 'No user provided'}")
+        print(f"Parse From: {request.data.get('parse_from')}")
 
         # Get the `parse_from` field from the request or default to all available brands
         parse_from = request.data.get(
@@ -161,7 +167,7 @@ class ProductService:
 
             # Add the scraped article to the user's profile
             user_profile.scraped_articles.add(shoe)
-
+            print(f"Saving product for user profile: {user_profile}")
             return shoe, created
         except Exception as e:
             # Log the error for debugging

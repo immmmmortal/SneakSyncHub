@@ -11,7 +11,11 @@ from restapi.serializers import ShoeSerializer
 class MockRequest:
     def __init__(self, user, parse_from):
         self.user = user
-        self.data = {"parse_from": parse_from}  # Mock the 'parse_from' data
+        self.data = {"parse_from": parse_from}
+
+    @property
+    def user_id(self):
+        return self.user.id
 
 
 class ScrapingConsumer(AsyncWebsocketConsumer):
@@ -63,7 +67,9 @@ class ScrapingConsumer(AsyncWebsocketConsumer):
         Process scraping for a single article and send the result progressively.
         """
         try:
-            result, error_response, status_code = await ProductService.process_scraping_async(article, mock_request)
+            result, error_response, status_code = (
+                await ProductService.process_scraping_async(article, mock_request)
+            )
 
             if result:
                 # Serialize the result (Shoe instance) using ShoeSerializer in a thread
@@ -82,7 +88,9 @@ class ScrapingConsumer(AsyncWebsocketConsumer):
                     error_response.get("statusText", "Unknown error"), article=article
                 )
         except Exception as e:
-            await self.send_error(f"Error processing article: {str(e)}", article=article)
+            await self.send_error(
+                f"Error processing article: {str(e)}", article=article
+            )
 
     async def send_error(self, error_message, article=None):
         """
@@ -97,4 +105,3 @@ class ScrapingConsumer(AsyncWebsocketConsumer):
                 }
             )
         )
-

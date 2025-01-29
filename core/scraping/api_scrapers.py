@@ -1,8 +1,15 @@
-from typing import List, Dict
+from typing import Dict
+from typing import List
 
 from curl_cffi import requests as cureq
 from curl_cffi.requests import exceptions
-
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from SneakSyncHub.settings import env
 from core.scraping.base import ScraperBase
 from core.scraping.selenium_scrapers import ProductData
 
@@ -10,7 +17,7 @@ from core.scraping.selenium_scrapers import ProductData
 class APIClient:
     def get(self, url: str) -> Dict:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "en-US,en;q=0.9",
             "Connection": "keep-alive",
@@ -55,10 +62,106 @@ class AdidasProductScraper(ScraperBase):
         self._search_url = self.__SEARCH_URL_TEMPLATE.format(article=self._article)
 
     def fetch_product_info(self) -> Dict:
-        return self._api_client.get(self._search_url)
+        try:
+            # Try fetching product info via API
+            return self._api_client.get(self._search_url)
+        except (ValueError, ConnectionError) as e:
+            # If an error occurs (e.g., API fails), fallback to Selenium
+            print(f"API request failed with error: {e}. Falling back to Selenium...")
+            return self.fetch_product_info_selenium()
 
     def fetch_product_sizes(self) -> Dict:
-        return self._api_client.get(self._search_url + "/availability")
+        try:
+            return self._api_client.get(self._search_url + "/availability")
+        except (ValueError, ConnectionError) as e:
+            print(
+                f"API request failed for sizes with error: {e}. Falling back to Selenium..."
+            )
+            return self.fetch_product_sizes_selenium()
+
+    def fetch_product_info_selenium(self) -> Dict:
+        # Set up Selenium WebDriver
+        driver_options = Options()
+        user_agent = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko)"
+            "Chrome/91.0.4472.124 Safari/537.36"
+        )
+        driver_options.add_argument(f"user-agent={user_agent}")
+        driver = webdriver.Remote(
+            command_executor=f"http://" f'{env("SELENIUM_HOST")}:4444/wd/hub',
+            options=driver_options,
+        )
+        driver.maximize_window()
+
+        # Navigate to the product page
+        product_url = self._search_url
+        driver.get(product_url)
+
+        try:
+            # Extract all the text from the page
+            page_source = driver.page_source
+            # You can use a parser to extract just the text content
+            from bs4 import BeautifulSoup
+
+            soup = BeautifulSoup(page_source, "html.parser")
+            all_text = soup.get_text(separator=" ", strip=True)
+
+            product_data = {
+                "all_text": all_text,
+                # This will contain all the textual content on the page
+            }
+        except Exception as e:
+            raise ValueError(f"Error while scraping data with Selenium: {e}")
+        finally:
+            driver.quit()
+
+        return product_data
+
+    def fetch_product_sizes_selenium(self) -> Dict:
+        # Similar method for fetching sizes via Selenium if API fails
+        driver_options = Options()
+
+        user_agent = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko)"
+            "Chrome/91.0.4472.124 Safari/537.36"
+        )
+        # Create Chrome options and set the user agent
+        driver_options.add_argument(f"user-agent={user_agent}")
+        driver = webdriver.Remote(
+            command_executor=f"http://" f'{env("SELENIUM_HOST")}:4444/wd/hub',
+            options=driver_options,
+        )
+        driver.maximize_window()
+
+        product_url = self._search_url + "/availability"
+        driver.get(product_url)
+
+        # Wait until the sizes section is available
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "size-availability"))
+        )
+
+        try:
+            sizes = self._extract_sizes(
+                driver
+            )  # Using the existing method to extract sizes
+        except Exception as e:
+            raise ValueError(f"Error while scraping sizes with Selenium: {e}")
+        finally:
+            driver.quit()
+
+        return {"sizes": sizes}
+
+    def _extract_sizes(self, driver) -> List[str]:
+        sizes = []
+        size_elements = driver.find_elements(By.CSS_SELECTOR, "div.size-option")
+        for element in size_elements:
+            size = element.text.strip()
+            if size:  # Only add valid sizes
+                sizes.append(size)
+        return sizes
 
 
 class AdidasProductParser:

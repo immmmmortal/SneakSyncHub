@@ -32,6 +32,7 @@
       <list>
         <option value="$MODULE_DIR$/core/scraping" />
         <option value="$MODULE_DIR$/core/formatting" />
+        <option value="$MODULE_DIR$/core/telegram_bot" />
       </list>
     </option>
   </component>

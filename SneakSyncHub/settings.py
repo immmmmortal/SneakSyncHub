@@ -136,45 +136,15 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": "logs/debug.log",
         },
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["file"],
         "level": "DEBUG",
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "django.db.backends": {
-            "handlers": ["console"],
-            "level": "WARNING",  # Change to WARNING to suppress SQL logs
-            "propagate": False,
-        },
-        "django.utils": {  # Add this logger to suppress Django utils logs
-            "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "elasticsearch_dsl": {  # Add this logger to suppress Elasticsearch logs
-            "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "pandas": {  # Add this logger to suppress Pandas logs
-            "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "jedi": {  # Add this logger to suppress Jedi logs
-            "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
     },
 }
 
@@ -270,10 +240,8 @@ SIMPLE_JWT = {
 
 ELASTICSEARCH_DSL = {
     "default": {
-        "hosts": f"https://{env('ES_HOST')}:9200",
+        "hosts": f"http://{env('ES_HOST')}:9200",
         "http_auth": ("elastic", env("ELASTIC_SEARCH_PASSWORD")),
-        "ca_certs": "certificates/elastic_search/http_ca.crt",
-        "verify_certs": False,
     }
 }
 

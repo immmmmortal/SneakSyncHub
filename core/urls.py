@@ -7,6 +7,7 @@ from core.views import (
     VerifyTelegramCodeAPIView,
     UnlinkTelegramView,
     CreateNotificationPreference,
+    UserNotificationPreferencesView,
 )
 
 router = routers.DefaultRouter()
@@ -33,4 +34,8 @@ urlpatterns = [
     ),
     path("unlink_telegram", UnlinkTelegramView.as_view()),
     path("create-preference/", CreateNotificationPreference.as_view()),
+    path(
+        "notification-preferences/",
+        UserNotificationPreferencesView.as_view(),
+    ),
 ]

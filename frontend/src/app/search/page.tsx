@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/app/lib/auth";
-import { Shoe } from "@/app/interfaces/interfaces";
+import { DesiredPrice, Shoe } from "@/app/interfaces/interfaces";
 import ArticleInfoComponent from "@/app/components/article_info";
 import SearchBarComponent from "@/app/components/search_bar";
 import FilterSectionComponent from "@/app/components/filter_section";
@@ -28,8 +28,12 @@ const SearchPage = () => {
     "Nike",
     "Adidas",
   ]);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage the modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [desiredPrices, setDesiredPrices] = useState<DesiredPrice[]>([]);
+  const computedMinPrice = isAuthenticated ? initialMinPrice : 0;
+  const computedMaxPrice = isAuthenticated ? initialMaxPrice : 200;
 
+  // Fetch logic remains unchanged
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
@@ -42,34 +46,35 @@ const SearchPage = () => {
           method: "GET",
           credentials: "include",
         });
-
         if (!response.ok) {
           if (response.status === 429) {
-            // Handle rate limit exceeded
             toast.error(
               "You have exceeded the rate limit for your subscription. Please upgrade to continue.",
             );
-            return; // Skip further processing if rate limit is exceeded
+            return;
           }
-
           setError(`HTTP error! Status: ${response.status}`);
           toast.error(response.statusText);
           return;
         }
-
         const result = await response.json();
         const { article_data } = result;
 
         if (Array.isArray(article_data)) {
           setShoes(article_data);
-
-          // Calculate and set initial min and max prices
           const prices = article_data.map((shoe) => parseFloat(shoe.price));
+          if (prices.length === 0) {
+            setInitialMinPrice(0);
+            setInitialMaxPrice(200);
+          } else {
+            setInitialMinPrice(Math.min(...prices));
+            setInitialMaxPrice(Math.max(...prices));
+          }
           setInitialMinPrice(Math.min(...prices));
           setInitialMaxPrice(Math.max(...prices));
         } else {
           setError("Unexpected response format");
-          toast.error(error);
+          toast.error("Unexpected response format");
         }
       } catch (error) {
         toast.error("Failed to fetch shoes");
@@ -78,33 +83,47 @@ const SearchPage = () => {
       }
     };
 
+    const fetchDesiredPrices = async () => {
+      try {
+        const response = await fetch(
+          "https://localhost/api/notification-preferences/",
+          {
+            method: "GET",
+            credentials: "include",
+          },
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setDesiredPrices(data);
+        }
+      } catch (error) {
+        console.error("Error fetching desired prices:", error);
+      }
+    };
+
     fetchShoes();
-  }, [isAuthenticated, error]);
+    fetchDesiredPrices();
+  }, [isAuthenticated]);
 
   const handleSearch = async (searchQuery: string) => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("https://localhost/api/fetch", {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           article: searchQuery,
           parse_from: selectedSources,
         }),
       });
-
       if (!response.ok) {
         if (response.status === 429) {
-          // Handle rate limit exceeded
           toast.error(
             "You have exceeded the rate limit for your subscription. Please upgrade to continue.",
           );
-          return; // Skip further processing if rate limit is exceeded
+          return;
         }
         setError(`HTTP error! Status: ${response.status}`);
         toast.error(error);
@@ -112,36 +131,27 @@ const SearchPage = () => {
       }
 
       const result = await response.json();
-      console.log(result);
       const newArticles = Array.isArray(result) ? result : [result];
 
       setShoes((prevShoes) => {
-        const newShoes = [...prevShoes];
         const newArticleSet = new Set(newArticles.map((article) => article.id));
-
-        // Remove existing articles from the list
-        const filteredShoes = newShoes.filter(
+        const filteredShoes = prevShoes.filter(
           (shoe) => !newArticleSet.has(shoe.id),
         );
-
-        // If the article exists, move it to the top
         const updatedShoes = newArticles.map((newArticle) => {
           const existingArticleIndex = prevShoes.findIndex(
             (shoe) => shoe.id === newArticle.id,
           );
           if (existingArticleIndex !== -1) {
             const updatedShoes = [...prevShoes];
-            updatedShoes[existingArticleIndex] = newArticle; // Update the existing shoe with the new data
+            updatedShoes[existingArticleIndex] = newArticle;
             return updatedShoes;
           }
-          return newArticle; // If not found, just return the new article
+          return newArticle;
         });
-
-        // Add new articles to the top and return the updated list
         return [...updatedShoes, ...filteredShoes];
       });
     } catch (error) {
-      console.error("Error:", error);
       setError("An error occurred while fetching the data. Please try again.");
       toast.error(
         "An error occurred while fetching the data. Please try again.",
@@ -153,7 +163,6 @@ const SearchPage = () => {
 
   const handleDelete = async (id: number) => {
     setError(null);
-
     try {
       const response = await fetch(`https://localhost/api/shoes/${id}/delete`, {
         method: "DELETE",
@@ -253,19 +262,12 @@ const SearchPage = () => {
                 {isAuthenticated ? (
                   <>
                     {loading ? (
-                      <>
-                        <div className="flex-auto">
-                          <ArticleInfoLoadingComponent />
-                          <ArticleInfoComponent
-                            handleDelete={handleDelete}
-                            shoes={shoes}
-                          />
-                        </div>
-                      </>
+                      <ArticleInfoLoadingComponent />
                     ) : shoes.length > 0 ? (
                       <ArticleInfoComponent
                         handleDelete={handleDelete}
                         shoes={shoes}
+                        desiredPrices={desiredPrices}
                       />
                     ) : (
                       <DefaultViewComponent
@@ -282,21 +284,12 @@ const SearchPage = () => {
                 )}
               </div>
               <div className="mt-5 flex self-stretch">
-                {isAuthenticated ? (
-                  <FilterSectionComponent
-                    minPrice={initialMinPrice}
-                    maxPrice={initialMaxPrice}
-                    setIsKeywordFiltered={setIsKeywordFiltered}
-                    onDataFetched={handleDataFetched} // Pass the handler
-                  />
-                ) : (
-                  <FilterSectionComponent
-                    minPrice={0}
-                    maxPrice={200}
-                    setIsKeywordFiltered={setIsKeywordFiltered}
-                    onDataFetched={handleDataFetched} // Pass the handler
-                  />
-                )}
+                <FilterSectionComponent
+                  minPrice={computedMinPrice}
+                  maxPrice={computedMaxPrice}
+                  setIsKeywordFiltered={setIsKeywordFiltered}
+                  onDataFetched={handleDataFetched}
+                />
               </div>
             </div>
           </div>

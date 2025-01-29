@@ -101,4 +101,21 @@ class ShoeNotificationPreference(models.Model):
         )  # Ensure a user can only set preferences for a shoe once
 
     def __str__(self):
-        return f"Preference for {self.shoe.name} by " f"{self.user.email}"
+        return f"Preference for {self.shoe.name} by {self.user.email}"
+
+    def get_user_preference_price(self):
+        """
+        Returns the user's desired price for the shoe and the final price to show
+        based on whether there is a sale price or not.
+        """
+        # Determine which price to use: sale price if available, otherwise regular price
+        final_price = (
+            self.shoe.sale_price
+            if self.shoe.sale_price and self.shoe.sale_price < self.shoe.price
+            else self.shoe.price
+        )
+
+        return {
+            "desired_price": self.desired_price,
+            "final_price": final_price,
+        }

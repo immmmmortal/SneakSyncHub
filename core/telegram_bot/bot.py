@@ -1,8 +1,9 @@
-import os
-import sys
-
+# bot.py
 import random
 import string
+
+import django
+import environ
 from django.core.cache import cache
 from telegram import Update
 from telegram.constants import ParseMode
@@ -12,11 +13,18 @@ from telegram.ext import (
     ContextTypes,
 )
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "SneakSyncHub.settings")
-from django.conf import settings
+from SneakSyncHub.settings import env
 
-BOT_TOKEN = settings.BOT_TOKEN
+# Environment setup
+environ.Env.read_env()
+BOT_TOKEN = env("BOT_TOKEN")
+
+# Ensure Django apps are loaded
+django.setup()
+
+# Import models here after calling django.setup()
+
+# Import the notify_user function from another module (to avoid circular imports)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -30,43 +38,36 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Debug log: Check the retrieved username
-    print(f"Retrieved username: {username}")
-
     # Generate a unique code
     unique_code = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
-    # Debug log: Storing username in cache
-    print(f"Storing in cache: {unique_code} -> {username}")
+    # Store in cache
     cache.set(
         f"verification_code_{unique_code}", username, timeout=3600
     )  # 1-hour expiration
 
-    # Use HTML to format the message
+    # Send message
     link = "https://localhost/?telegramModal=true"
     message = (
         f"Hello {username} 👋\n\n"
         f"Your verification code is:\n\n"
         f"<code>{unique_code}</code>\n\n"
         "Follow these steps to link your Telegram account:\n"
-        "1. Copy the code sent to you here.\n"
-        "2. Paste it into the input field on the website:\n"
-        f'<a href="{link}">Click here to verify</a>\n\n'
-        "If you haven't initiated this process, return to the app and click the Connect button."
+        f'<a href="{link}">Click here to verify</a>'
     )
 
-    # Send message with parse_mode=ParseMode.HTML to render the hyperlink
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
 
 
 def main():
     """Main entry point for the bot."""
-    application = Application.builder().token(BOT_TOKEN).build()
+    # Ensure Django apps are loaded
+    django.setup()
 
-    # Register handlers
+    application = Application.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
 
-    # Start polling for updates (messages)
+    # Start polling for updates
     application.run_polling()
 
 

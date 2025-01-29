@@ -534,7 +534,8 @@ class CreateNotificationPreference(APIView):
 
         price = request.data.get("price")
         shoe_article = request.data.get("shoe_article")
-        user = get_user_profile(request)
+        user_profile = get_user_profile(request)
+        user = user_profile.user
 
         shoe = get_object_or_404(Shoe, article=shoe_article)
 
@@ -550,3 +551,28 @@ class CreateNotificationPreference(APIView):
             ShoeNotificationPreferenceSerializer(preference).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+
+class UserNotificationPreferencesView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure that the user is authenticated
+
+    def get(self, request):
+        # Get all shoes for which the user has notification preferences set
+        preferences = ShoeNotificationPreference.objects.filter(user=request.user)
+
+        # Format the response with shoe data and their respective preferences
+        data = []
+        for preference in preferences:
+            shoe = preference.shoe
+            data.append(
+                {
+                    "shoe": ShoeSerializer(shoe).data,
+                    "desired_price": (
+                        str(preference.desired_price)
+                        if preference.desired_price
+                        else None
+                    ),
+                }
+            )
+
+        return Response(data, status=status.HTTP_200_OK)
