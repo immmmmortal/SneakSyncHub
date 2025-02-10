@@ -5,7 +5,7 @@ import string
 import django
 import environ
 from django.core.cache import cache
-from telegram import Update
+from telegram import Update, Bot
 from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
@@ -25,6 +25,8 @@ django.setup()
 # Import models here after calling django.setup()
 
 # Import the notify_user function from another module (to avoid circular imports)
+
+bot = Bot(token=BOT_TOKEN)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -57,6 +59,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(message, parse_mode=ParseMode.HTML)
+
+
+def send_recommendations(user, shoes):
+    chat_id = user.telegram_chat_id  # Store Telegram chat ID in user model
+
+    if not chat_id:
+        return
+
+    message = "👟 We found new sneaker recommendations for you:\n\n"
+    for shoe in shoes:
+        message += f"🔹 {shoe.name} - {shoe.price}$\n"
+        message += f"[View Shoe]({shoe.url})\n\n"
+
+    bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
 
 
 def main():
