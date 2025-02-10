@@ -1,3 +1,37 @@
+# Dependency directories
+node_modules/
+venv/
+env/
 .env
-/.vscode/
-/certificates/
+.env.docker
+/staticfiles
+/members/migrations
+/core/migrations
+.devcontainer
+.vscode
+.idea
+/certificates
+node_modules
+
+# Compiled code
+*.o
+*.pyc
+*.class
+
+# Build output directories
+/bin/
+/out/
+/target/
+
+# Runtime files
+*.log
+*.lock
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE configuration files
+.idea/
+*.iml
