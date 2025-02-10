@@ -1,7 +1,0 @@
-{
-    "git.ignoreLimitWarning": true,
-    "python.languageServer": "Pylance",
-    "eslint.workingDirectories": [
-        {"mode": "auto"}
- ],
-}
