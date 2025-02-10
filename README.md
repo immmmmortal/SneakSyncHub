@@ -1,83 +1,166 @@
 # SneakSyncHub
 
-A synchronized data processing platform with Elasticsearch, Kibana, PostgreSQL, and Telegram integration.
+SneakSyncHub is a web scraping tool specifically designed to extract detailed information about sneakers from various online retail and sneaker websites.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Setup Instructions](#setup-instructions)
+  - [Docker Setup](#docker-setup)
+  - [Virtual Environment & Dependencies](#virtual-environment--dependencies)
+  - [Elasticsearch Setup](#elasticsearch-setup)
+  - [PostgreSQL Setup](#postgresql-setup)
+  - [Telegram Bot Token Setup](#telegram-bot-token-setup)
+- [Running the Application](#running-the-application)
+- [License](#license)
 
 ## Prerequisites
 
+Before setting up SneakSyncHub, make sure you have the following installed on your machine:
+
 - Docker & Docker Compose
-- Python 3.x
-- Python venv module
-- OpenSSL (for certificate generation)
+- Python 3.8+ (for running locally)
+- PostgreSQL (for database setup)
+- Telegram Bot Token (for notifications)
 
 ## Setup Instructions
 
-### 1. Environment Variables
-Create `.env` file in project root:
-```env
-# PostgreSQL
-POSTGRES_DB=sshub_db
-POSTGRES_USER=sshub_user
-POSTGRES_PASSWORD=strongpassword123
+### Docker Setup
 
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=your_bot_token_here
+1. Clone the repository to your local machine:
 
-# Elasticsearch
-ELASTIC_PASSWORD=elasticpassword123
+   ```bash
+   git clone https://github.com/immmmmortal/SneakSyncHub.git
+   cd SneakSyncHub
+   ```
 
-# Kibana
-KIBANA_PASSWORD=kibanapassword123
+2. Build and start the Docker containers:
 
-2. Generate Certificates
-mkdir -p config/certs
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout config/certs/elasticsearch.key \
-  -out config/certs/elasticsearch.crt \
-  -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+   ```bash
+   docker-compose up --build
+   ```
 
-chmod 644 config/certs/elasticsearch.key
+   This will:
+   - Build the Docker images for the application, PostgreSQL, and Elasticsearch.
+   - Start the application, PostgreSQL, Elasticsearch, and Kibana services.
 
-3. Docker Setup
-docker-compose up -d
+3. Once the containers are running, you can access:
+   - **Kibana** at [http://localhost:5601](http://localhost:5601)
+   - **Elasticsearch** at [http://localhost:9200](http://localhost:9200)
 
-4. PostgreSQL Database Setup
-docker exec -it sneak_sync_hub_postgres_1 createdb -U ${POSTGRES_USER} ${POSTGRES_DB}
+### Virtual Environment & Dependencies
 
-5. Python Virtual Environment
-python -m venv venv
-source venv/bin/activate  # Linux/MacOS
-# venv\Scripts\activate  # Windows
-pip install -r requirements.txt
+If you prefer running the project locally (without Docker), follow these steps:
 
-6. Run Application
-python manage.py runserver
+1. Create and activate a virtual environment:
 
-Configuration Summary
-Service	Credentials	Port
-Elasticsearch	elastic / ${ELASTIC_PASSWORD}	9200
-Kibana	kibana_system / ${KIBANA_PASSWORD}	5601
-PostgreSQL	
-P
-O
-S
-T
-G
-R
-E
-S
-U
-S
-E
-R
-/
-POSTGRES 
-U
-​
- SER/{POSTGRES_PASSWORD}	5432
-Telegram Bot	Token: ${TELEGRAM_BOT_TOKEN}	-
-Notes/Troubleshooting
-Certificate Issues:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate   # For macOS/Linux
+   .\venv\Scripts\activate    # For Windows
+   ```
 
-Ensure certificates have proper permissions
+2. Install the required dependencies:
 
-Regenerate certificates if seeing SSL errors
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Elasticsearch Setup
+
+SneakSyncHub requires Elasticsearch for data storage. It must be configured with certificates and passwords. Follow these steps to set up Elasticsearch:
+
+1. Generate certificates for Elasticsearch:
+
+   You can use **OpenSSL** to generate certificates, or follow Elasticsearch's official guide to set up certificates.
+
+   ```bash
+   openssl genpkey -algorithm RSA -out elasticsearch.key
+   openssl req -new -key elasticsearch.key -out elasticsearch.csr
+   openssl x509 -req -days 365 -in elasticsearch.csr -signkey elasticsearch.key -out elasticsearch.crt
+   ```
+
+   Place the `elasticsearch.key`, `elasticsearch.crt`, and `elasticsearch.csr` files in the `./elasticsearch/certificates/` directory.
+
+2. Set the passwords for Elasticsearch and Kibana:
+
+   Set the passwords for `elastic` and `kibana` users:
+
+   ```bash
+   docker exec -it <elasticsearch_container_id> bin/elasticsearch-setup-passwords interactive
+   ```
+
+   Follow the prompts to set the passwords.
+
+3. Restart the Elasticsearch service to apply the password changes:
+
+   ```bash
+   docker-compose restart elasticsearch
+   ```
+
+### PostgreSQL Setup
+
+SneakSyncHub uses PostgreSQL for storing user and sneaker data. To create the required database:
+
+1. Connect to PostgreSQL inside the Docker container:
+
+   ```bash
+   docker exec -it <postgres_container_id> psql -U postgres
+   ```
+
+2. Create the necessary database and user:
+
+   ```sql
+   CREATE DATABASE sneak_sync;
+   CREATE USER sneak_user WITH PASSWORD 'your_password';
+   ALTER ROLE sneak_user SET client_encoding TO 'utf8';
+   ALTER ROLE sneak_user SET default_transaction_isolation TO 'read committed';
+   ALTER ROLE sneak_user SET timezone TO 'UTC';
+   GRANT ALL PRIVILEGES ON DATABASE sneak_sync TO sneak_user;
+   ```
+
+3. Update your `settings.py` to reflect the database credentials.
+
+### Telegram Bot Token Setup
+
+SneakSyncHub sends notifications via a Telegram bot. To set it up:
+
+1. Create a Telegram bot by talking to [BotFather](https://core.telegram.org/bots#botfather).
+2. Get the bot token after creating your bot.
+3. Set the bot token in the environment variables:
+
+   ```bash
+   export TELEGRAM_BOT_TOKEN="your_bot_token"
+   ```
+
+   Alternatively, add it to a `.env` file:
+
+   ```env
+   TELEGRAM_BOT_TOKEN="your_bot_token"
+   ```
+
+## Running the Application
+
+1. **Start the application**:
+
+   If you're using Docker, run:
+
+   ```bash
+   docker-compose up
+   ```
+
+   If you're running locally (without Docker), simply use:
+
+   ```bash
+   python manage.py runserver
+   ```
+
+2. The application should now be up and running.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**SneakSyncHub** is developed and maintained by [immmmmortal](https://github.com/immmmmortal).
